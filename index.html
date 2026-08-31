@@ -2214,16 +2214,26 @@
 
                 <div class="results-card">
                   <section
-                    class="wizard-results__explanation results-summary"
-                    id="wizard-results-explanation"
-                    aria-label="Розклад розрахунку"
-                  ></section>
-
-                  <section
-                    class="wizard-results__total"
-                    id="wizard-results-total"
-                    aria-label="Підсумок"
-                  ></section>
+                    class="results-breakdown"
+                    aria-labelledby="results-breakdown-title"
+                  >
+                    <h3 class="results-breakdown__title" id="results-breakdown-title">
+                      Деталізація розрахунку
+                    </h3>
+                    <div class="results-table-wrap">
+                      <table class="results-table">
+                        <thead>
+                          <tr>
+                            <th scope="col">Найменування</th>
+                            <th scope="col">Значення</th>
+                            <th scope="col">Скорочення</th>
+                            <th scope="col">Розрахунок</th>
+                          </tr>
+                        </thead>
+                        <tbody id="wizard-results-explanation"></tbody>
+                      </table>
+                    </div>
+                  </section>
                 </div>
 
                 <section

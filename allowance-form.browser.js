@@ -1290,7 +1290,6 @@ const wizardEdit = document.getElementById("wizard-edit");
 const wizardResultsExplanation = document.getElementById(
   "wizard-results-explanation"
 );
-const wizardResultsTotal = document.getElementById("wizard-results-total");
 const wizardResultsInputsList = document.getElementById("wizard-results-inputs-list");
 
 const rankTitleField = document.getElementById("rank-title-field");
@@ -2930,25 +2929,12 @@ function renderInputSummary() {
   });
 }
 
-function renderTotalPay(result) {
-  if (!wizardResultsTotal) return;
-
-  wizardResultsTotal.replaceChildren();
-
-  const totalRow = document.createElement("div");
-  totalRow.className = "results-total";
-
-  const label = document.createElement("p");
-  label.className = "results-total__label";
-  label.textContent = "До видачі на руки:";
-
-  const value = document.createElement("p");
-  value.className = "results-total__value results-total__value--pay";
-  value.textContent = formatMoney(result.netPay) + " грн";
-
-  totalRow.appendChild(label);
-  totalRow.appendChild(value);
-  wizardResultsTotal.appendChild(totalRow);
+function appendResultCell(row, text, className) {
+  const cell = document.createElement("td");
+  cell.className = className;
+  cell.textContent = text || "";
+  row.appendChild(cell);
+  return cell;
 }
 
 function renderExplanation(result) {
@@ -2957,51 +2943,45 @@ function renderExplanation(result) {
   wizardResultsExplanation.replaceChildren();
 
   buildResultLines(result).forEach(function (line) {
-    if (line.rowType === "final") return;
-
-    const row = document.createElement("div");
-    row.className = "explanation-line explanation-line--summary-row";
+    const row = document.createElement("tr");
+    row.className = "results-table__row";
 
     if (line.rowType === "separator" || line.rowType === "subtotal") {
-      row.classList.add("explanation-line--total");
+      row.classList.add("results-table__row--total");
+    }
+    if (line.rowType === "final") {
+      row.classList.add("results-table__row--final");
     }
     if (line.negative) {
-      row.classList.add("explanation-line--negative");
+      row.classList.add("results-table__row--negative");
     }
     if (line.error && line.nonBlocking) {
-      row.classList.add("explanation-line--warning");
+      row.classList.add("results-table__row--note");
     }
     if (line.error && !line.nonBlocking) {
-      row.classList.add("explanation-line--error");
+      row.classList.add("results-table__row--error");
     }
 
-    const head = document.createElement("div");
-    head.className = "explanation-line__head";
-
-    const main = document.createElement("p");
-    main.className = "explanation-line__main";
-    main.textContent = line.name;
-
-    const value = document.createElement("p");
-    value.className = "explanation-line__value";
     if (line.error && line.value == null) {
-      value.textContent = line.error;
-    } else if (line.value == null) {
-      value.textContent = "";
-    } else {
-      value.textContent = formatMoney(line.value);
+      const cell = document.createElement("td");
+      cell.colSpan = 4;
+      cell.className = line.nonBlocking
+        ? "results-table__note"
+        : "results-table__error";
+      cell.textContent = line.error;
+      row.appendChild(cell);
+      wizardResultsExplanation.appendChild(row);
+      return;
     }
 
-    head.appendChild(main);
-    head.appendChild(value);
-    row.appendChild(head);
-
-    if (line.calc) {
-      const cite = document.createElement("p");
-      cite.className = "explanation-line__cite";
-      cite.textContent = line.calc;
-      row.appendChild(cite);
-    }
+    appendResultCell(row, line.name, "results-table__name");
+    appendResultCell(
+      row,
+      line.value == null ? "" : formatMoney(line.value),
+      "results-table__value"
+    );
+    appendResultCell(row, line.abbr || "", "results-table__abbr");
+    appendResultCell(row, line.calc || "", "results-table__calc");
 
     wizardResultsExplanation.appendChild(row);
   });
@@ -3015,7 +2995,6 @@ function showWizardResultsView() {
 
 function showResults(result) {
   renderExplanation(result);
-  renderTotalPay(result);
   renderInputSummary();
   showWizardResultsView();
 }

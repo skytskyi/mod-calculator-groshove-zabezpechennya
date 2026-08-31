@@ -1783,6 +1783,121 @@ body.mod-nav-open {
   background: var(--white);
 }
 
+.results-breakdown {
+  margin: 0;
+}
+
+.results-breakdown__title {
+  margin: 0 0 16px;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 500;
+  color: var(--text-strong);
+}
+
+.results-table-wrap {
+  overflow-x: auto;
+}
+
+.results-table {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.results-table th,
+.results-table td {
+  padding: 10px 16px 10px 0;
+  text-align: left;
+  vertical-align: top;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 400;
+  color: #4f4f4f;
+}
+
+.results-table th:last-child,
+.results-table td:last-child {
+  padding-right: 0;
+}
+
+.results-table th {
+  font-weight: 500;
+  color: var(--text-strong);
+  border-bottom: 1px solid #d0d0d0;
+}
+
+.results-table td {
+  border-bottom: 1px solid #ececec;
+}
+
+.results-table th:nth-child(1),
+.results-table td:nth-child(1) {
+  width: 32%;
+}
+
+.results-table th:nth-child(2),
+.results-table td:nth-child(2) {
+  width: 16%;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.results-table th:nth-child(3),
+.results-table td:nth-child(3) {
+  width: 14%;
+}
+
+.results-table th:nth-child(4),
+.results-table td:nth-child(4) {
+  width: 38%;
+}
+
+.results-table__row--total td {
+  font-weight: 700;
+  color: var(--text-strong);
+  border-top: 1px solid #d0d0d0;
+  border-bottom: 1px solid #d0d0d0;
+}
+
+.results-table__row--negative .results-table__value {
+  color: #c62828;
+}
+
+.results-table__row--note td,
+.results-table__note {
+  color: #c45c12;
+  border-bottom: 0;
+  padding-top: 4px;
+}
+
+.results-table__row--error td,
+.results-table__error {
+  color: #c62828;
+}
+
+.results-table__row--final td {
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: 700;
+  color: var(--text-strong);
+  border-top: 1px solid #d0d0d0;
+  border-bottom: 0;
+  padding-top: 16px;
+}
+
+.results-table__row--final .results-table__value {
+  color: var(--orange);
+}
+
+@media (min-width: 900px) {
+  .results-table__row--final td {
+    font-size: 20px;
+    line-height: 28px;
+  }
+}
+
 .results-card .deferral-results__explanation {
   display: flex;
   flex-direction: column;
