@@ -54,27 +54,7 @@
                       id="wizard-step-basics"
                       tabindex="-1"
                     >
-                      <fieldset class="field" id="field-service">
-                        <legend class="field__legend">Вид проходження військової служби</legend>
-                        <div class="radio-row radio-row--wizard">
-                          <label class="radio-card">
-                            <input type="radio" name="service" value="contract" />
-                            <span class="radio-card__ui"></span>
-                            <span class="radio-card__content">
-                              <span class="radio-card__text">Контрактна військова служба</span>
-                            </span>
-                          </label>
-                          <label class="radio-card">
-                            <input type="radio" name="service" value="mob" />
-                            <span class="radio-card__ui"></span>
-                            <span class="radio-card__content">
-                              <span class="radio-card__text">За призовом (мобілізація)</span>
-                            </span>
-                          </label>
-                        </div>
-                      </fieldset>
-
-                      <fieldset class="field wizard-step__section" id="field-rank">
+                      <fieldset class="field" id="field-rank">
                         <legend class="field__legend">Рівень звання</legend>
                         <div class="radio-row radio-row--wizard">
                           <label class="radio-card">
@@ -218,8 +198,16 @@
                           </div>
                         </div>
                       </div>
+                    </div>
 
-                      <fieldset class="field wizard-step__section" id="field-years">
+                    <div
+                      class="wizard-step"
+                      data-step-id="years"
+                      id="wizard-step-years"
+                      tabindex="-1"
+                      hidden
+                    >
+                      <fieldset class="field" id="field-years">
                         <legend class="field__legend">Вислуга років (повні роки, без місяців)</legend>
                         <div class="radio-row radio-row--wizard">
                           <label class="radio-card">
@@ -381,7 +369,7 @@
                         </legend>
                         <div class="radio-row radio-row--wizard">
                           <label class="radio-card">
-                            <input type="radio" name="nopsMode" value="default" />
+                            <input type="radio" name="nopsMode" value="default" checked />
                             <span class="radio-card__ui"></span>
                             <span class="radio-card__content">
                               <span class="radio-card__text">За замовчуванням</span>
@@ -454,7 +442,16 @@
                         <legend class="field__legend">Спеціалізація</legend>
                         <div class="radio-row radio-row--wizard" id="nops-specialization-options"></div>
                       </fieldset>
+                    </div>
 
+                    <div
+                      class="wizard-step"
+                      data-step-id="qualification"
+                      id="wizard-step-qualification"
+                      tabindex="-1"
+                      hidden
+                    >
+                      <h3 class="wizard-section-title">Секретність і шифрувальна робота</h3>
                       <label class="switch-field wizard-step__section" id="field-has-secrecy">
                         <span class="switch-field__text">Є ступінь секретності</span>
                         <input
@@ -548,16 +545,9 @@
                           </div>
                         </fieldset>
                       </div>
-                    </div>
 
-                    <div
-                      class="wizard-step"
-                      data-step-id="qualification"
-                      id="wizard-step-qualification"
-                      tabindex="-1"
-                      hidden
-                    >
-                      <h3 class="wizard-section-title">Класна кваліфікація</h3>
+                      <hr class="title-rule wizard-step__section" />
+                      <h3 class="wizard-section-title wizard-step__section">Класна кваліфікація</h3>
                       <label class="switch-field wizard-step__section" id="field-has-class-qualification">
                         <span class="switch-field__text">Маю присвоєну класну кваліфікацію</span>
                         <input
@@ -849,155 +839,58 @@
                     </div>
                     <div
                       class="wizard-step"
-                      data-step-id="period"
-                      id="wizard-step-period"
-                      tabindex="-1"
-                      hidden
-                    >
-                      <fieldset class="field" id="field-settlement-month">
-                        <legend class="field__legend">Розрахунковий місяць</legend>
-                        <div class="radio-row radio-row--wizard">
-                          <label class="radio-card">
-                            <input type="radio" name="settlementMonth" value="1" />
-                            <span class="radio-card__ui"></span>
-                            <span class="radio-card__content">
-                              <span class="radio-card__text">Січень</span>
-                            </span>
-                          </label>
-                          <label class="radio-card">
-                            <input type="radio" name="settlementMonth" value="2" />
-                            <span class="radio-card__ui"></span>
-                            <span class="radio-card__content">
-                              <span class="radio-card__text">Лютий</span>
-                            </span>
-                          </label>
-                          <label class="radio-card">
-                            <input type="radio" name="settlementMonth" value="3" />
-                            <span class="radio-card__ui"></span>
-                            <span class="radio-card__content">
-                              <span class="radio-card__text">Березень</span>
-                            </span>
-                          </label>
-                          <label class="radio-card">
-                            <input type="radio" name="settlementMonth" value="4" />
-                            <span class="radio-card__ui"></span>
-                            <span class="radio-card__content">
-                              <span class="radio-card__text">Квітень</span>
-                            </span>
-                          </label>
-                          <label class="radio-card">
-                            <input type="radio" name="settlementMonth" value="5" />
-                            <span class="radio-card__ui"></span>
-                            <span class="radio-card__content">
-                              <span class="radio-card__text">Травень</span>
-                            </span>
-                          </label>
-                          <label class="radio-card">
-                            <input type="radio" name="settlementMonth" value="6" />
-                            <span class="radio-card__ui"></span>
-                            <span class="radio-card__content">
-                              <span class="radio-card__text">Червень</span>
-                            </span>
-                          </label>
-                          <label class="radio-card">
-                            <input type="radio" name="settlementMonth" value="7" />
-                            <span class="radio-card__ui"></span>
-                            <span class="radio-card__content">
-                              <span class="radio-card__text">Липень</span>
-                            </span>
-                          </label>
-                          <label class="radio-card">
-                            <input type="radio" name="settlementMonth" value="8" />
-                            <span class="radio-card__ui"></span>
-                            <span class="radio-card__content">
-                              <span class="radio-card__text">Серпень</span>
-                            </span>
-                          </label>
-                          <label class="radio-card">
-                            <input type="radio" name="settlementMonth" value="9" />
-                            <span class="radio-card__ui"></span>
-                            <span class="radio-card__content">
-                              <span class="radio-card__text">Вересень</span>
-                            </span>
-                          </label>
-                          <label class="radio-card">
-                            <input type="radio" name="settlementMonth" value="10" />
-                            <span class="radio-card__ui"></span>
-                            <span class="radio-card__content">
-                              <span class="radio-card__text">Жовтень</span>
-                            </span>
-                          </label>
-                          <label class="radio-card">
-                            <input type="radio" name="settlementMonth" value="11" />
-                            <span class="radio-card__ui"></span>
-                            <span class="radio-card__content">
-                              <span class="radio-card__text">Листопад</span>
-                            </span>
-                          </label>
-                          <label class="radio-card">
-                            <input type="radio" name="settlementMonth" value="12" />
-                            <span class="radio-card__ui"></span>
-                            <span class="radio-card__content">
-                              <span class="radio-card__text">Грудень</span>
-                            </span>
-                          </label>
-                        </div>
-                      </fieldset>
-
-                      <div
-                        class="field field--tariff wizard-step__section"
-                        id="settlement-year-field"
-                        data-min="2022"
-                        data-max="2035"
-                        tabindex="-1"
-                      >
-                        <label class="field__legend" for="settlement-year">Рік</label>
-                        <div class="tariff-stepper">
-                          <button
-                            type="button"
-                            class="stepper__btn"
-                            id="settlement-year-dec"
-                            aria-label="Зменшити рік на 1"
-                          >
-                            −
-                          </button>
-                          <div class="tariff-stepper__input-shell">
-                            <input
-                              id="settlement-year"
-                              class="tariff-input"
-                              name="settlementYear"
-                              type="text"
-                              inputmode="numeric"
-                              value="2026"
-                              maxlength="4"
-                              autocomplete="off"
-                              aria-describedby="settlement-year-error"
-                            />
-                          </div>
-                          <button
-                            type="button"
-                            class="stepper__btn"
-                            id="settlement-year-inc"
-                            aria-label="Збільшити рік на 1"
-                          >
-                            +
-                          </button>
-                        </div>
-                        <p class="field-error" id="settlement-year-error" role="alert" hidden>
-                          Вкажіть рік від 2022 до 2035
-                        </p>
-                      </div>
-                    </div>
-
-
-                    <div
-                      class="wizard-step"
                       data-step-id="rewards"
                       id="wizard-step-rewards"
                       tabindex="-1"
                       hidden
                     >
-                      <h3 class="wizard-section-title">Одноразові винагороди</h3>
+                      <fieldset
+                        class="field"
+                        id="field-settlement-period"
+                        data-min="2022"
+                        data-max="2035"
+                      >
+                        <legend class="field__legend">Місяць і рік</legend>
+                        <div class="tariff-stepper period-stepper">
+                          <button
+                            type="button"
+                            class="stepper__btn"
+                            id="settlement-period-dec"
+                            aria-label="Попередній місяць"
+                          >
+                            ‹
+                          </button>
+                          <p
+                            class="period-stepper__value"
+                            id="settlement-period-label"
+                            aria-live="polite"
+                          >
+                            Серпень 2026
+                          </p>
+                          <button
+                            type="button"
+                            class="stepper__btn"
+                            id="settlement-period-inc"
+                            aria-label="Наступний місяць"
+                          >
+                            ›
+                          </button>
+                        </div>
+                        <input
+                          type="hidden"
+                          id="settlement-month"
+                          name="settlementMonth"
+                          value="8"
+                        />
+                        <input
+                          type="hidden"
+                          id="settlement-year"
+                          name="settlementYear"
+                          value="2026"
+                        />
+                      </fieldset>
+
+                      <h3 class="wizard-section-title wizard-step__section">Одноразові винагороди</h3>
                       <label class="switch-field wizard-step__section" id="field-reward-group-onetime">
                         <span class="switch-field__text">Чи були одноразові винагороди?</span>
                         <input
@@ -2176,41 +2069,50 @@
                 aria-live="polite"
               >
                 <h2 class="wizard-results__title">Результат розрахунку</h2>
-                <div class="wizard-info-box wizard-info-box--with-icon" role="note">
-                  <span class="wizard-info-box__icon" aria-hidden="true">
-                    <svg
-                      width="20"
-                      height="20"
-                      viewBox="0 0 16 16"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <circle
-                        cx="8"
-                        cy="8"
-                        r="7.25"
-                        stroke="currentColor"
-                        stroke-width="1.5"
-                      />
-                      <circle cx="8" cy="5.25" r="0.9" fill="currentColor" />
-                      <path
-                        d="M8 7.25V11.5"
-                        stroke="currentColor"
-                        stroke-width="1.5"
-                        stroke-linecap="round"
-                      />
-                    </svg>
-                  </span>
-                  <div class="wizard-info-box__body">
-                    <p class="wizard-info-box__title">Зверніть увагу!</p>
-                    <p class="wizard-info-box__text">
-                      Результати калькулятору мають інформаційний характер і не є фінансовим
-                      інструментом розрахунку грошового забезпечення чи інших виплат. Вони можуть
-                      відрізнятися від фактичних нарахувань залежно від індивідуальних обставин,
-                      наказів командирів та інших документів, що застосовуються під час розрахунку.
-                    </p>
+                <section
+                  class="results-card results-pay"
+                  aria-labelledby="wizard-results-total-label"
+                >
+                  <p class="results-pay__label" id="wizard-results-total-label">
+                    До видачі на руки
+                  </p>
+                  <p class="results-pay__amount" id="wizard-results-total"></p>
+                  <div class="wizard-info-box wizard-info-box--with-icon" role="note">
+                    <span class="wizard-info-box__icon" aria-hidden="true">
+                      <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <circle
+                          cx="8"
+                          cy="8"
+                          r="7.25"
+                          stroke="currentColor"
+                          stroke-width="1.5"
+                        />
+                        <circle cx="8" cy="5.25" r="0.9" fill="currentColor" />
+                        <path
+                          d="M8 7.25V11.5"
+                          stroke="currentColor"
+                          stroke-width="1.5"
+                          stroke-linecap="round"
+                        />
+                      </svg>
+                    </span>
+                    <div class="wizard-info-box__body">
+                      <p class="wizard-info-box__title">Зверніть увагу!</p>
+                      <p class="wizard-info-box__text">
+                        Результати калькулятору мають інформаційний характер і не є фінансовим
+                        інструментом розрахунку грошового забезпечення чи інших виплат. Вони можуть
+                        відрізнятися від фактичних нарахувань залежно від індивідуальних обставин,
+                        наказів командирів та інших документів, що застосовуються під час розрахунку.
+                      </p>
+                    </div>
                   </div>
-                </div>
+                </section>
 
                 <div class="results-card">
                   <section

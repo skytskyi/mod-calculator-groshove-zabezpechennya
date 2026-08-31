@@ -1290,6 +1290,7 @@ const wizardEdit = document.getElementById("wizard-edit");
 const wizardResultsExplanation = document.getElementById(
   "wizard-results-explanation"
 );
+const wizardResultsTotal = document.getElementById("wizard-results-total");
 const wizardResultsInputsList = document.getElementById("wizard-results-inputs-list");
 
 const rankTitleField = document.getElementById("rank-title-field");
@@ -1305,9 +1306,9 @@ let currentStepIndex = 0;
 
 const WIZARD_STEPS = [
   "basics",
+  "years",
   "conditions",
   "qualification",
-  "period",
   "rewards",
   "combat_results",
   "discipline",
@@ -1315,38 +1316,33 @@ const WIZARD_STEPS = [
 
 const STEP_META = {
   basics: {
-    title: "Основні дані про проходження служби",
-    help: "Заповніть дані про службу, звання, тарифний розряд і вислугу років.",
+    title: "Звання та тарифний розряд",
+    help: "Оберіть рівень звання, конкретне звання та тарифний розряд.",
+  },
+  years: {
+    title: "Вислуга років",
+    help: "Оберіть повні роки вислуги, без урахування місяців.",
   },
   conditions: {
     title: "Умови військової служби",
-    help: "Оберіть місце служби (для премії), особливості служби для НОПС, ступінь секретності та стаж на шифрувальній роботі.",
+    help: "Оберіть місце проходження служби та розмір надбавки за особливості проходження служби (НОПС).",
   },
   qualification: {
-    title: "Кваліфікація та звання",
-    help: "Цей розділ заповнюється лише за наявності підстав на додаткові види нарахування.",
+    title: "Секретність, кваліфікація та додаткові звання",
+    help: "Цей розділ заповнюється лише за наявності ступеня секретності, шифрувального стажу чи підстав на додаткові види нарахування.",
   },
   discipline: {
     title: "Дисципліна",
     help: "Йдеться про догани, невиходи на службу (навчання) чи інші суттєві порушення. Ознака не змінює розраховану суму автоматично.",
   },
-  period: {
-    title: "Розрахунковий період",
-    help: "Оберіть місяць і рік, за який рахуємо забезпечення.",
-  },
   rewards: {
-    title: "Одноразові та додаткові винагороди",
-    help: "Одноразові, додаткові та штурмові винагороди мають незалежні ліміти днів місяця.",
+    title: "Період і винагороди",
+    help: "Оберіть місяць і рік, потім вкажіть одноразові, додаткові та штурмові винагороди.",
   },
   combat_results: {
     title: "Винагороди за полонених і знищення",
     help: "15 000 грн за кожного знищеного та 100 000 грн за кожного полоненого. Калькулятор ділить винагороду порівну між усіма учасниками.",
   },
-};
-
-const SERVICE_LABELS = {
-  contract: "Контрактна військова служба",
-  mob: "За призовом (мобілізація)",
 };
 
 const RANK_LABELS = {
@@ -1611,11 +1607,12 @@ const REWARD_GROUP_LABELS = {
   no: "Ні",
 };
 
-const settlementYearField = document.getElementById("settlement-year-field");
+const settlementPeriodField = document.getElementById("field-settlement-period");
+const settlementMonthInput = document.getElementById("settlement-month");
 const settlementYearInput = document.getElementById("settlement-year");
-const settlementYearError = document.getElementById("settlement-year-error");
-const settlementYearInc = document.getElementById("settlement-year-inc");
-const settlementYearDec = document.getElementById("settlement-year-dec");
+const settlementPeriodLabel = document.getElementById("settlement-period-label");
+const settlementPeriodInc = document.getElementById("settlement-period-inc");
+const settlementPeriodDec = document.getElementById("settlement-period-dec");
 const nopsCategoryOptions = document.getElementById("nops-category-options");
 const nopsSpecializationOptions = document.getElementById(
   "nops-specialization-options"
@@ -1623,10 +1620,10 @@ const nopsSpecializationOptions = document.getElementById(
 let filledNopsSpecCategoryId = null;
 
 const SETTLEMENT_YEAR_MIN = Number(
-  (settlementYearField && settlementYearField.dataset.min) || 2022
+  (settlementPeriodField && settlementPeriodField.dataset.min) || 2022
 );
 const SETTLEMENT_YEAR_MAX = Number(
-  (settlementYearField && settlementYearField.dataset.max) || 2035
+  (settlementPeriodField && settlementPeriodField.dataset.max) || 2035
 );
 
 const TARIFF_MIN = Number((tariffField && tariffField.dataset.min) || 1);
@@ -1799,12 +1796,14 @@ function onRankTitleChange() {
 }
 
 function isBasicsFilled() {
-  if (!getSelectedValue("service")) return false;
   if (!getSelectedValue("rank")) return false;
   if (!getSelectedValue("rankTitle")) return false;
   if (!parseTariff().ok) return false;
-  if (!getSelectedValue("years")) return false;
   return true;
+}
+
+function isYearsFilled() {
+  return Boolean(getSelectedValue("years"));
 }
 
 function requiresNopsDetails() {
@@ -1946,6 +1945,10 @@ function isConditionsFilled() {
   }
   if (!getSelectedValue("servicePlace")) return false;
   if (requiresSsoPosition() && !getSelectedValue("ssoPosition")) return false;
+  return true;
+}
+
+function isSecrecyFilled() {
   if (hasSecrecyLevel() && !getSelectedValue("secrecy")) return false;
   if (hasCipherTenure() && !getSelectedValue("cipherTenure")) return false;
   return true;
@@ -2005,6 +2008,7 @@ function syncCipherTenureFields() {
 }
 
 function isQualificationFilled() {
+  if (!isSecrecyFilled()) return false;
   if (hasClassQualification() && !getSelectedValue("classQualification")) return false;
   if (requiresMedicalQualification()) {
     if (!getSelectedValue("medicalQualCategory")) return false;
@@ -2136,49 +2140,60 @@ function getDefaultSettlementDate() {
 
 function applyDefaultSettlementPeriod() {
   const def = getDefaultSettlementDate();
+  if (settlementMonthInput) settlementMonthInput.value = String(def.month);
   if (settlementYearInput) settlementYearInput.value = String(def.year);
-  document.querySelectorAll('input[name="settlementMonth"]').forEach(function (input) {
-    input.checked = Number(input.value) === def.month;
-  });
-  validateSettlementYear();
+  updateSettlementPeriodDisplay();
 }
 
 function parseSettlementYear() {
   if (!settlementYearInput) return { ok: false };
-  const raw = settlementYearInput.value.trim();
+  const raw = String(settlementYearInput.value || "").trim();
   if (!raw || !/^\d+$/.test(raw)) return { ok: false };
   const n = Number.parseInt(raw, 10);
   if (n < SETTLEMENT_YEAR_MIN || n > SETTLEMENT_YEAR_MAX) return { ok: false, n };
   return { ok: true, n };
 }
 
-function setSettlementYearValidity(valid) {
-  if (!settlementYearField || !settlementYearError || !settlementYearInput) return;
-  settlementYearField.classList.toggle("is-invalid", !valid);
-  settlementYearError.hidden = valid;
-  settlementYearInput.setAttribute("aria-invalid", valid ? "false" : "true");
+function updateSettlementPeriodDisplay() {
+  const month = getSettlementMonth();
+  const year = parseSettlementYear();
+  if (settlementPeriodLabel) {
+    const monthName = MONTH_LABELS[month] || "";
+    settlementPeriodLabel.textContent = year.ok
+      ? monthName + " " + year.n
+      : monthName;
+  }
+  const monthNum = Number(month);
+  const atMin = year.ok && monthNum === 1 && year.n === SETTLEMENT_YEAR_MIN;
+  const atMax = year.ok && monthNum === 12 && year.n === SETTLEMENT_YEAR_MAX;
+  if (settlementPeriodDec) settlementPeriodDec.disabled = atMin;
+  if (settlementPeriodInc) settlementPeriodInc.disabled = atMax;
 }
 
-function validateSettlementYear() {
-  const result = parseSettlementYear();
-  setSettlementYearValidity(result.ok);
-  return result;
-}
-
-function applySettlementYearDelta(delta) {
-  if (!settlementYearInput) return;
-  const result = parseSettlementYear();
-  let base = result.ok ? result.n : SETTLEMENT_YEAR_MIN;
-  let next = base + delta;
-  if (next < SETTLEMENT_YEAR_MIN) next = SETTLEMENT_YEAR_MIN;
-  if (next > SETTLEMENT_YEAR_MAX) next = SETTLEMENT_YEAR_MAX;
-  settlementYearInput.value = String(next);
-  validateSettlementYear();
+function applySettlementPeriodDelta(deltaMonths) {
+  const yearResult = parseSettlementYear();
+  let month = Number(getSettlementMonth() || 1);
+  let year = yearResult.ok ? yearResult.n : SETTLEMENT_YEAR_MIN;
+  month += deltaMonths;
+  while (month < 1) {
+    month += 12;
+    year -= 1;
+  }
+  while (month > 12) {
+    month -= 12;
+    year += 1;
+  }
+  if (year < SETTLEMENT_YEAR_MIN || year > SETTLEMENT_YEAR_MAX) return;
+  if (settlementMonthInput) settlementMonthInput.value = String(month);
+  if (settlementYearInput) settlementYearInput.value = String(year);
+  updateSettlementPeriodDisplay();
   onWizardInputChange();
 }
 
 function getSettlementMonth() {
-  return getSelectedValue("settlementMonth");
+  return settlementMonthInput && settlementMonthInput.value
+    ? settlementMonthInput.value
+    : null;
 }
 
 function getDaysInSettlementMonth() {
@@ -2415,16 +2430,16 @@ function isStepFilled(stepId) {
   switch (stepId) {
     case "basics":
       return isBasicsFilled();
+    case "years":
+      return isYearsFilled();
     case "conditions":
       return isConditionsFilled();
     case "qualification":
       return isQualificationFilled();
     case "discipline":
       return isDisciplineFilled();
-    case "period":
-      return isPeriodFilled();
     case "rewards":
-      return isRewardsFilled();
+      return isPeriodFilled() && isRewardsFilled();
     case "combat_results":
       return isCombatResultsFilled();
     default:
@@ -2525,14 +2540,6 @@ function renderWizardStep() {
 
 function collectAnswersSummary() {
   const items = [];
-
-  const service = getSelectedValue("service");
-  if (service) {
-    items.push({
-      label: "Вид проходження військової служби",
-      value: SERVICE_LABELS[service] || service,
-    });
-  }
 
   const rank = getSelectedValue("rank");
   if (rank) {
@@ -2835,7 +2842,7 @@ function buildCalcInput() {
   const tariff = parseTariff();
   const yearsKey = getSelectedValue("years");
   const servicePlace = getSelectedValue("servicePlace");
-  const settlementMonth = getSelectedValue("settlementMonth");
+  const settlementMonth = getSettlementMonth();
   const settlementYear = parseSettlementYear();
   const extraRanks = getYesNoValue("extraRanks");
   const classQualification = getClassQualificationValue();
@@ -2929,6 +2936,11 @@ function renderInputSummary() {
   });
 }
 
+function renderNetPay(result) {
+  if (!wizardResultsTotal) return;
+  wizardResultsTotal.textContent = formatMoney(result.netPay) + " грн";
+}
+
 function appendResultCell(row, text, className) {
   const cell = document.createElement("td");
   cell.className = className;
@@ -2994,6 +3006,7 @@ function showWizardResultsView() {
 }
 
 function showResults(result) {
+  renderNetPay(result);
   renderExplanation(result);
   renderInputSummary();
   showWizardResultsView();
@@ -3113,10 +3126,10 @@ function clearChecked(name) {
 }
 
 function resetWizard() {
-  clearChecked("service");
   clearChecked("rank");
   clearChecked("years");
-  clearChecked("nopsMode");
+  const nopsDefault = document.querySelector('input[name="nopsMode"][value="default"]');
+  if (nopsDefault) nopsDefault.checked = true;
   clearChecked("servicePlace");
   clearChecked("ssoPosition");
   clearChecked("hasSecrecy");
@@ -3154,7 +3167,6 @@ function resetWizard() {
     if (daysInput) daysInput.value = "0";
   });
 
-  clearChecked("settlementMonth");
   applyDefaultSettlementPeriod();
 
   const prisonersCount = document.getElementById("prisoners-count");
@@ -3254,9 +3266,6 @@ function init() {
     wizardEdit.addEventListener("click", editWizardFromResults);
   }
 
-  document.querySelectorAll('input[name="service"]').forEach(function (input) {
-    input.addEventListener("change", onWizardInputChange);
-  });
   document.querySelectorAll('input[name="rank"]').forEach(function (input) {
     input.addEventListener("change", onRankChange);
   });
@@ -3288,7 +3297,6 @@ function init() {
     "hasViolations",
     "hasEnemiesDestruction",
     "hasPrisoners",
-    "settlementMonth",
     "rewardGroup_combat",
     "rewardGroup_training",
     "rewardGroup_onetime",
@@ -3307,22 +3315,15 @@ function init() {
       });
   });
 
-  if (settlementYearInc) {
-    settlementYearInc.addEventListener("click", function () {
-      applySettlementYearDelta(1);
+  if (settlementPeriodInc) {
+    settlementPeriodInc.addEventListener("click", function () {
+      applySettlementPeriodDelta(1);
     });
   }
-  if (settlementYearDec) {
-    settlementYearDec.addEventListener("click", function () {
-      applySettlementYearDelta(-1);
+  if (settlementPeriodDec) {
+    settlementPeriodDec.addEventListener("click", function () {
+      applySettlementPeriodDelta(-1);
     });
-  }
-  if (settlementYearInput) {
-    settlementYearInput.addEventListener("input", function () {
-      validateSettlementYear();
-      onWizardInputChange();
-    });
-    settlementYearInput.addEventListener("blur", validateSettlementYear);
   }
 
   if (tariffInc) {
@@ -3360,7 +3361,6 @@ function init() {
   updateDaysBadges();
   updateCombatShares();
   validateTariff();
-  validateSettlementYear();
   renderWizardStep();
 }
 
