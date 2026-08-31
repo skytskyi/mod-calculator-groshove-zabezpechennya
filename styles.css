@@ -813,13 +813,9 @@ body.mod-nav-open {
 
 .radio-card:not(:has(.radio-card__term)) {
   min-height: 0;
-  align-items: center;
+  align-items: flex-start;
   padding-top: 16px;
   padding-bottom: 16px;
-}
-
-.radio-card:not(:has(.radio-card__term)) .radio-card__ui {
-  margin-top: 0;
 }
 
 .radio-card input {
@@ -835,6 +831,7 @@ body.mod-nav-open {
   background: var(--main-bg);
   border-radius: 50%;
   flex-shrink: 0;
+  align-self: flex-start;
   margin-top: 4px;
   position: relative;
 }
@@ -1552,6 +1549,7 @@ body.mod-nav-open {
 .combat-assignment-grid.radio-row--wizard .radio-card {
   width: 100%;
   max-width: 100%;
+  align-items: flex-start;
 }
 
 .wizard__error {
