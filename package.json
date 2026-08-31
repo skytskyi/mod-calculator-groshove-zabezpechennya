@@ -1,0 +1,15 @@
+{
+  "name": "mod-calculator-groshove-zabezpechennya",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:browser": "python3 scripts/build_browser.py"
+  },
+  "dependencies": {
+    "date-fns": "^4.1.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0",
+    "vitest": "^3.0.5"
+  }
+}
