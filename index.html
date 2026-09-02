@@ -42,7 +42,7 @@
                     id="wizard-progress"
                     aria-live="polite"
                   >
-                    1/7
+                    1/8
                   </p>
                   <h2 class="wizard__question" id="wizard-question"></h2>
                   <p id="wizard-help" class="wizard__help"></p>
@@ -82,7 +82,7 @@
                             <input type="radio" name="rank" value="r4" />
                             <span class="radio-card__ui"></span>
                             <span class="radio-card__content">
-                              <span class="radio-card__text">Вищий офіцерський (генерали / адмірали)</span>
+                              <span class="radio-card__text">Вищий офіцерський</span>
                             </span>
                           </label>
                         </div>
@@ -320,8 +320,8 @@
                         hidden
                         tabindex="-1"
                       >
-                        <legend class="field__legend">Посада в Силах спеціальних операцій</legend>
-                        <div class="radio-row radio-row--wizard">
+                        <legend class="field__legend">Посади ССО</legend>
+                        <div class="radio-row radio-row--wizard radio-row--stack">
                           <label class="radio-card">
                             <input type="radio" name="ssoPosition" value="sso_main" />
                             <span class="radio-card__ui"></span>
@@ -330,7 +330,6 @@
                                 >Посади інструкторів і основних підрозділів центрів спеціального призначення та навчально-тренувальних центрів</span
                               >
                             </span>
-                            <span class="radio-card__percent">100%</span>
                           </label>
                           <label class="radio-card">
                             <input type="radio" name="ssoPosition" value="sso_command" />
@@ -340,7 +339,6 @@
                                 >Посади в Командуванні ССО та управліннях центрів</span
                               >
                             </span>
-                            <span class="radio-card__percent">80%</span>
                           </label>
                           <label class="radio-card">
                             <input type="radio" name="ssoPosition" value="sso_support" />
@@ -350,7 +348,6 @@
                                 >Посади у підрозділах забезпечення та визначених управліннях і основних підрозділах спеціальних центрів</span
                               >
                             </span>
-                            <span class="radio-card__percent">70%</span>
                           </label>
                           <label class="radio-card">
                             <input type="radio" name="ssoPosition" value="sso_other" />
@@ -358,7 +355,6 @@
                             <span class="radio-card__content">
                               <span class="radio-card__text">Інші військовослужбовці ССО</span>
                             </span>
-                            <span class="radio-card__percent">50%</span>
                           </label>
                         </div>
                       </fieldset>
@@ -369,12 +365,12 @@
                         </legend>
                         <div class="radio-row radio-row--wizard">
                           <label class="radio-card">
-                            <input type="radio" name="nopsMode" value="default" checked />
+                            <input type="radio" name="nopsMode" value="default" />
                             <span class="radio-card__ui"></span>
                             <span class="radio-card__content">
                               <span class="radio-card__text">За замовчуванням</span>
+                              <span class="radio-card__term" id="nops-default-pct">НОПС: 65%</span>
                             </span>
-                            <span class="radio-card__percent">65%</span>
                           </label>
                           <label class="radio-card">
                             <input type="radio" name="nopsMode" value="other" />
@@ -429,7 +425,7 @@
                         hidden
                         tabindex="-1"
                       >
-                        <legend class="field__legend">Напрям служби</legend>
+                        <legend class="field__legend">Напрям служби (для визначення розміру надбавки)</legend>
                         <div class="radio-row radio-row--wizard" id="nops-category-options"></div>
                       </fieldset>
 
@@ -439,7 +435,7 @@
                         hidden
                         tabindex="-1"
                       >
-                        <legend class="field__legend">Спеціалізація</legend>
+                        <legend class="field__legend">Спеціалізація (для визначення розміру надбавки)</legend>
                         <div class="radio-row radio-row--wizard" id="nops-specialization-options"></div>
                       </fieldset>
                     </div>
@@ -452,6 +448,7 @@
                       hidden
                     >
                       <h3 class="wizard-section-title">Секретність і шифрувальна робота</h3>
+                      <div class="switch-group-card">
                       <label class="switch-field wizard-step__section" id="field-has-secrecy">
                         <span class="switch-field__text">Є ступінь секретності</span>
                         <input
@@ -464,6 +461,19 @@
                         <span class="switch-field__ui" aria-hidden="true"></span>
                       </label>
                       <div class="wizard-conditional" id="secrecy-level-details" hidden>
+                      <div class="switch-group-card__item" id="field-rso">
+                      <label class="switch-field" id="field-rso-switch">
+                        <span class="switch-field__text">Служу в режимно-секретному органі</span>
+                        <input
+                          type="checkbox"
+                          class="switch-field__input"
+                          id="rsoAffiliation"
+                          name="rsoAffiliation"
+                          value="yes"
+                        />
+                        <span class="switch-field__ui" aria-hidden="true"></span>
+                      </label>
+                      </div>
                         <fieldset class="field" id="field-secrecy">
                           <legend class="field__legend">Ступінь секретності</legend>
                           <div class="radio-row radio-row--wizard">
@@ -491,19 +501,9 @@
                           </div>
                         </fieldset>
                       </div>
+                      </div>
 
-                      <label class="switch-field wizard-step__section" id="field-rso" hidden tabindex="-1">
-                        <span class="switch-field__text">Служу в режимно-секретному органі</span>
-                        <input
-                          type="checkbox"
-                          class="switch-field__input"
-                          id="rsoAffiliation"
-                          name="rsoAffiliation"
-                          value="yes"
-                        />
-                        <span class="switch-field__ui" aria-hidden="true"></span>
-                      </label>
-
+                      <div class="switch-group-card">
                       <label class="switch-field wizard-step__section" id="field-has-cipher-tenure">
                         <span class="switch-field__text">Маю безперервний стаж на шифрувальній роботі</span>
                         <input
@@ -545,9 +545,10 @@
                           </div>
                         </fieldset>
                       </div>
+                      </div>
 
-                      <hr class="title-rule wizard-step__section" />
                       <h3 class="wizard-section-title wizard-step__section">Класна кваліфікація</h3>
+                      <div class="switch-group-card">
                       <label class="switch-field wizard-step__section" id="field-has-class-qualification">
                         <span class="switch-field__text">Маю присвоєну класну кваліфікацію</span>
                         <input
@@ -668,11 +669,11 @@
                             </label>
                           </div>
                         </fieldset>
-                        <hr class="title-rule wizard-step__section" />
+                        </div>
                       </div>
 
-                      <hr class="title-rule wizard-step__section" />
                       <h3 class="wizard-section-title wizard-step__section">Додаткові звання</h3>
+                      <div class="switch-group-card">
                       <label class="switch-field wizard-step__section" id="field-extra-ranks">
                         <span class="switch-field__text">Маю додаткові звання, що збігаються за профілем з займаною посадою (у т.ч. тимчасово займана посада)</span>
                         <input
@@ -685,6 +686,7 @@
                         <span class="switch-field__ui" aria-hidden="true"></span>
                       </label>
                       <div class="wizard-conditional" id="extra-ranks-details" hidden>
+                        <div class="switch-group-card__item">
                         <label class="switch-field" id="field-has-honorary-title">
                           <span class="switch-field__text">Маю почесне звання</span>
                           <input
@@ -719,7 +721,9 @@
                             </div>
                           </fieldset>
                         </div>
+                        </div>
 
+                        <div class="switch-group-card__item">
                         <label class="switch-field wizard-step__section" id="field-has-sports-title">
                           <span class="switch-field__text">Маю спортивне звання</span>
                           <input
@@ -766,7 +770,9 @@
                             </div>
                           </fieldset>
                         </div>
+                        </div>
 
+                        <div class="switch-group-card__item">
                         <label class="switch-field wizard-step__section" id="field-has-science-degree">
                           <span class="switch-field__text">Маю науковий ступінь</span>
                           <input
@@ -801,7 +807,9 @@
                             </div>
                           </fieldset>
                         </div>
+                        </div>
 
+                        <div class="switch-group-card__item">
                         <label class="switch-field wizard-step__section" id="field-has-academic-title">
                           <span class="switch-field__text">Маю вчене звання</span>
                           <input
@@ -834,7 +842,8 @@
                             </div>
                           </fieldset>
                         </div>
-                        <hr class="title-rule wizard-step__section" />
+                        </div>
+                        </div>
                       </div>
                     </div>
                     <div
@@ -850,15 +859,21 @@
                         data-min="2022"
                         data-max="2035"
                       >
-                        <legend class="field__legend">Місяць і рік</legend>
+                        <legend class="field__legend">Розрахунковий місяць і рік</legend>
                         <div class="tariff-stepper period-stepper">
                           <button
                             type="button"
-                            class="stepper__btn"
+                            class="stepper__btn period-stepper__btn"
                             id="settlement-period-dec"
                             aria-label="Попередній місяць"
                           >
-                            ‹
+                            <img
+                              class="period-stepper__icon"
+                              src="assets/arrow-left.png"
+                              alt=""
+                              width="24"
+                              height="24"
+                            />
                           </button>
                           <p
                             class="period-stepper__value"
@@ -869,11 +884,17 @@
                           </p>
                           <button
                             type="button"
-                            class="stepper__btn"
+                            class="stepper__btn period-stepper__btn"
                             id="settlement-period-inc"
                             aria-label="Наступний місяць"
                           >
-                            ›
+                            <img
+                              class="period-stepper__icon period-stepper__icon--next"
+                              src="assets/arrow-left.png"
+                              alt=""
+                              width="24"
+                              height="24"
+                            />
                           </button>
                         </div>
                         <input
@@ -891,6 +912,7 @@
                       </fieldset>
 
                       <h3 class="wizard-section-title wizard-step__section">Одноразові винагороди</h3>
+                      <div class="switch-group-card">
                       <label class="switch-field wizard-step__section" id="field-reward-group-onetime">
                         <span class="switch-field__text">Чи були одноразові винагороди?</span>
                         <input
@@ -902,8 +924,7 @@
                         />
                         <span class="switch-field__ui" aria-hidden="true"></span>
                       </label>
-                      <div class="wizard-conditional" id="reward-group-onetime-details" hidden>
-                      <div class="wizard-info-box wizard-info-box--with-icon" role="note">
+                      <div class="wizard-info-box wizard-info-box--with-icon" role="note" hidden>
                         <span class="wizard-info-box__icon" aria-hidden="true">
                           <svg
                             width="20"
@@ -931,13 +952,21 @@
                         <div class="wizard-info-box__body">
                           <p class="wizard-info-box__title">Як зазначати кількість днів?</p>
                           <p class="wizard-info-box__text">
-                            Якщо за один день мали право і на 170 000, і на 70 000 грн,
-                            зазначте цей день лише для 170 000 грн.
+                            Для кожної винагороди вказуйте лише ті дні, коли вона була найбільшою
+                            серед усіх додаткових винагород, на які ви мали право. За один день
+                            враховується лише одна — найбільша — винагорода.
+                          </p>
+                          <p class="wizard-info-box__text">
+                            Наприклад, якщо в один день ви мали право на 170 000 грн і 70 000 грн,
+                            зазначте цей день лише для винагороди 170 000 грн.
                           </p>
                         </div>
                       </div>
+                      <div class="wizard-conditional" id="reward-group-onetime-details" hidden>
+
+                      <div class="switch-group-card__item">
                       <label class="switch-field" id="field-reward-stronghold_platoon">
-                        <span class="switch-field__text">Виконання бойових завдань до взводного опорного пункту (170 000 грн/міс)</span>
+                        <span class="switch-field__text">Виконання бойових завдань до взводного опорного пункту <span class="switch-field__amount">170 000 грн за повний місяць</span></span>
                         <input
                           type="checkbox"
                           class="switch-field__input"
@@ -987,12 +1016,15 @@
                             +
                           </button>
                         </div>
-                        <p class="wizard-days-badge wizard-days-badge--field" data-days-badge="onetime" aria-live="polite">
-                          Можна вказати ще — днів
+                        <p class="field-hint" data-days-badge="onetime" aria-live="polite">Можна вказати ще — днів</p>
+                        <p class="combat-share" data-reward-amount="stronghold_platoon" aria-live="polite">
+                          Сума винагороди: —
                         </p>
                       </div>
+                      </div>
+                      <div class="switch-group-card__item">
                       <label class="switch-field wizard-step__section" id="field-reward-stronghold_company">
-                        <span class="switch-field__text">Виконання бойових завдань до ротного опорного пункту (70 000 грн/міс)</span>
+                        <span class="switch-field__text">Виконання бойових завдань до ротного опорного пункту <span class="switch-field__amount">70 000 грн за повний місяць</span></span>
                         <input
                           type="checkbox"
                           class="switch-field__input"
@@ -1042,238 +1074,17 @@
                             +
                           </button>
                         </div>
-                        <p class="wizard-days-badge wizard-days-badge--field" data-days-badge="onetime" aria-live="polite">
-                          Можна вказати ще — днів
+                        <p class="field-hint" data-days-badge="onetime" aria-live="polite">Можна вказати ще — днів</p>
+                        <p class="combat-share" data-reward-amount="stronghold_company" aria-live="polite">
+                          Сума винагороди: —
                         </p>
                       </div>
-                      <hr class="title-rule wizard-step__section" />
+                      </div>
+                      </div>
                       </div>
 
-                      <hr class="title-rule wizard-step__section" />
-                      <h3 class="wizard-section-title wizard-step__section">Додаткові винагороди</h3>
-
-                      <label class="switch-field wizard-step__section" id="field-reward-group-combat">
-                        <span class="switch-field__text">Чи були бойові або службові завдання з додатковою винагородою?</span>
-                        <input
-                          type="checkbox"
-                          class="switch-field__input"
-                          id="rewardGroup_combat"
-                          name="rewardGroup_combat"
-                          value="yes"
-                        />
-                        <span class="switch-field__ui" aria-hidden="true"></span>
-                      </label>
-                      <div class="wizard-conditional" id="reward-group-combat-details" hidden>
-                      <div class="wizard-info-box wizard-info-box--with-icon" role="note">
-                        <span class="wizard-info-box__icon" aria-hidden="true">
-                          <svg
-                            width="20"
-                            height="20"
-                            viewBox="0 0 16 16"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <circle
-                              cx="8"
-                              cy="8"
-                              r="7.25"
-                              stroke="currentColor"
-                              stroke-width="1.5"
-                            />
-                            <circle cx="8" cy="5.25" r="0.9" fill="currentColor" />
-                            <path
-                              d="M8 7.25V11.5"
-                              stroke="currentColor"
-                              stroke-width="1.5"
-                              stroke-linecap="round"
-                            />
-                          </svg>
-                        </span>
-                        <div class="wizard-info-box__body">
-                          <p class="wizard-info-box__title">Як зазначати кількість днів?</p>
-                          <p class="wizard-info-box__text">
-                            Для кожної винагороди вказуйте лише кількість днів, протягом яких вона
-                            була найбільшою з усіх додаткових винагород, на які ви мали право. За
-                            решту днів винагорода 10 000 грн буде розрахована автоматично.
-                          </p>
-                          <p class="wizard-info-box__title">Приклад:</p>
-                          <p class="wizard-info-box__text">
-                            Якщо протягом 10 днів ви одночасно мали право на винагороди
-                            30 000 грн і 100 000 грн, зазначте ці 10 днів лише для винагороди
-                            100 000 грн.
-                          </p>
-                        </div>
-                      </div>
-                      <label class="switch-field" id="field-reward-combat_actions">
-                        <span class="switch-field__text">Участь у бойових діях (100 000 грн/міс)</span>
-                        <input
-                          type="checkbox"
-                          class="switch-field__input"
-                          id="reward_combat_actions"
-                          name="reward_combat_actions"
-                          value="yes"
-                        />
-                        <span class="switch-field__ui" aria-hidden="true"></span>
-                      </label>
-                      <div
-                        class="field field--days wizard-step__section"
-                        id="field-days-combat_actions"
-                        data-days-pool="shared"
-                        hidden
-                        tabindex="-1"
-                      >
-                        <label class="field__legend" for="days-combat_actions">Кількість днів</label>
-                        <div
-                          class="tariff-stepper days-stepper"
-                          data-days-id="combat_actions"
-                          data-min="0"
-                        >
-                          <button
-                            type="button"
-                            class="stepper__btn days-dec"
-                            aria-label="Зменшити кількість днів"
-                          >
-                            −
-                          </button>
-                          <div class="tariff-stepper__input-shell">
-                            <input
-                              id="days-combat_actions"
-                              class="tariff-input days-input"
-                              name="days_combat_actions"
-                              type="text"
-                              inputmode="numeric"
-                              value="0"
-                              maxlength="2"
-                              autocomplete="off"
-                            />
-                          </div>
-                          <button
-                            type="button"
-                            class="stepper__btn days-inc"
-                            aria-label="Збільшити кількість днів"
-                          >
-                            +
-                          </button>
-                        </div>
-                        <p class="wizard-days-badge wizard-days-badge--field" data-days-badge="additional" aria-live="polite">
-                          Можна вказати ще — днів
-                        </p>
-                      </div>
-                      <label class="switch-field wizard-step__section" id="field-reward-command_posts">
-                        <span class="switch-field__text">Виконання завдань на пунктах управління (50 000 грн/міс)</span>
-                        <input
-                          type="checkbox"
-                          class="switch-field__input"
-                          id="reward_command_posts"
-                          name="reward_command_posts"
-                          value="yes"
-                        />
-                        <span class="switch-field__ui" aria-hidden="true"></span>
-                      </label>
-                      <div
-                        class="field field--days wizard-step__section"
-                        id="field-days-command_posts"
-                        data-days-pool="shared"
-                        hidden
-                        tabindex="-1"
-                      >
-                        <label class="field__legend" for="days-command_posts">Кількість днів</label>
-                        <div
-                          class="tariff-stepper days-stepper"
-                          data-days-id="command_posts"
-                          data-min="0"
-                        >
-                          <button
-                            type="button"
-                            class="stepper__btn days-dec"
-                            aria-label="Зменшити кількість днів"
-                          >
-                            −
-                          </button>
-                          <div class="tariff-stepper__input-shell">
-                            <input
-                              id="days-command_posts"
-                              class="tariff-input days-input"
-                              name="days_command_posts"
-                              type="text"
-                              inputmode="numeric"
-                              value="0"
-                              maxlength="2"
-                              autocomplete="off"
-                            />
-                          </div>
-                          <button
-                            type="button"
-                            class="stepper__btn days-inc"
-                            aria-label="Збільшити кількість днів"
-                          >
-                            +
-                          </button>
-                        </div>
-                        <p class="wizard-days-badge wizard-days-badge--field" data-days-badge="additional" aria-live="polite">
-                          Можна вказати ще — днів
-                        </p>
-                      </div>
-                      <label class="switch-field wizard-step__section" id="field-reward-combat_special">
-                        <span class="switch-field__text">Виконання бойових (спеціальних) завдань (30 000 грн/міс)</span>
-                        <input
-                          type="checkbox"
-                          class="switch-field__input"
-                          id="reward_combat_special"
-                          name="reward_combat_special"
-                          value="yes"
-                        />
-                        <span class="switch-field__ui" aria-hidden="true"></span>
-                      </label>
-                      <div
-                        class="field field--days wizard-step__section"
-                        id="field-days-combat_special"
-                        data-days-pool="shared"
-                        hidden
-                        tabindex="-1"
-                      >
-                        <label class="field__legend" for="days-combat_special">Кількість днів</label>
-                        <div
-                          class="tariff-stepper days-stepper"
-                          data-days-id="combat_special"
-                          data-min="0"
-                        >
-                          <button
-                            type="button"
-                            class="stepper__btn days-dec"
-                            aria-label="Зменшити кількість днів"
-                          >
-                            −
-                          </button>
-                          <div class="tariff-stepper__input-shell">
-                            <input
-                              id="days-combat_special"
-                              class="tariff-input days-input"
-                              name="days_combat_special"
-                              type="text"
-                              inputmode="numeric"
-                              value="0"
-                              maxlength="2"
-                              autocomplete="off"
-                            />
-                          </div>
-                          <button
-                            type="button"
-                            class="stepper__btn days-inc"
-                            aria-label="Збільшити кількість днів"
-                          >
-                            +
-                          </button>
-                        </div>
-                        <p class="wizard-days-badge wizard-days-badge--field" data-days-badge="additional" aria-live="polite">
-                          Можна вказати ще — днів
-                        </p>
-                      </div>
-                      <hr class="title-rule wizard-step__section" />
-                      </div>
-
-                      <hr class="title-rule wizard-step__section" />
                       <h3 class="wizard-section-title wizard-step__section">Винагороди за ведення штурмових дій</h3>
+                      <div class="switch-group-card">
                       <label class="switch-field wizard-step__section" id="field-reward-group-assault">
                         <span class="switch-field__text">Чи були винагороди за штурмові дії?</span>
                         <input
@@ -1285,8 +1096,7 @@
                         />
                         <span class="switch-field__ui" aria-hidden="true"></span>
                       </label>
-                      <div class="wizard-conditional" id="reward-group-assault-details" hidden>
-                      <div class="wizard-info-box wizard-info-box--with-icon" role="note">
+                      <div class="wizard-info-box wizard-info-box--with-icon" role="note" hidden>
                         <span class="wizard-info-box__icon" aria-hidden="true">
                           <svg
                             width="20"
@@ -1314,14 +1124,21 @@
                         <div class="wizard-info-box__body">
                           <p class="wizard-info-box__title">Як зазначати кількість днів?</p>
                           <p class="wizard-info-box__text">
-                            Для кожного дня враховується лише найбільша винагорода. Якщо за один
-                            день ви мали право і на 40 000 грн, і на 20 000 грн, зазначте його лише
-                            для винагороди 40 000 грн.
+                            Для кожної винагороди вказуйте лише ті дні, коли вона була найбільшою
+                            серед усіх додаткових винагород, на які ви мали право. За один день
+                            враховується лише одна — найбільша — винагорода.
+                          </p>
+                          <p class="wizard-info-box__text">
+                            Наприклад, якщо в один день ви мали право на 40 000 грн і 20 000 грн,
+                            зазначте цей день лише для винагороди 40 000 грн.
                           </p>
                         </div>
                       </div>
+                      <div class="wizard-conditional" id="reward-group-assault-details" hidden>
+
+                      <div class="switch-group-card__item">
                       <label class="switch-field" id="field-reward-restore_positions">
-                        <span class="switch-field__text">Відновлення позицій (20 000 грн/добу)</span>
+                        <span class="switch-field__text">Відновлення позицій <span class="switch-field__amount">20 000 грн/добу</span></span>
                         <input
                           type="checkbox"
                           class="switch-field__input"
@@ -1371,12 +1188,15 @@
                             +
                           </button>
                         </div>
-                        <p class="wizard-days-badge wizard-days-badge--field" data-days-badge="assault" aria-live="polite">
-                          Можна вказати ще — днів
+                        <p class="field-hint" data-days-badge="assault" aria-live="polite">Можна вказати ще — днів</p>
+                        <p class="combat-share" data-reward-amount="restore_positions" aria-live="polite">
+                          Сума винагороди: —
                         </p>
                       </div>
+                      </div>
+                      <div class="switch-group-card__item">
                       <label class="switch-field wizard-step__section" id="field-reward-capture_positions">
-                        <span class="switch-field__text">Захоплення позицій (40 000 грн/добу)</span>
+                        <span class="switch-field__text">Захоплення позицій <span class="switch-field__amount">40 000 грн/добу</span></span>
                         <input
                           type="checkbox"
                           class="switch-field__input"
@@ -1426,14 +1246,259 @@
                             +
                           </button>
                         </div>
-                        <p class="wizard-days-badge wizard-days-badge--field" data-days-badge="assault" aria-live="polite">
-                          Можна вказати ще — днів
+                        <p class="field-hint" data-days-badge="assault" aria-live="polite">Можна вказати ще — днів</p>
+                        <p class="combat-share" data-reward-amount="capture_positions" aria-live="polite">
+                          Сума винагороди: —
                         </p>
                       </div>
-                      <hr class="title-rule wizard-step__section" />
                       </div>
-                      <hr class="title-rule wizard-step__section" />
+                      </div>
+                      </div>
+                    </div>
+
+                    <div
+                      class="wizard-step"
+                      data-step-id="rewards_additional"
+                      id="wizard-step-rewards-additional"
+                      tabindex="-1"
+                      hidden
+                    >
+                      <h3 class="wizard-section-title">Додаткові винагороди</h3>
+                      <div class="switch-group-card">
+                      <label class="switch-field wizard-step__section" id="field-reward-group-combat">
+                        <span class="switch-field__text">Чи були бойові або службові завдання з додатковою винагородою?</span>
+                        <input
+                          type="checkbox"
+                          class="switch-field__input"
+                          id="rewardGroup_combat"
+                          name="rewardGroup_combat"
+                          value="yes"
+                        />
+                        <span class="switch-field__ui" aria-hidden="true"></span>
+                      </label>
+                      <div class="wizard-info-box wizard-info-box--with-icon" role="note" hidden>
+                        <span class="wizard-info-box__icon" aria-hidden="true">
+                          <svg
+                            width="20"
+                            height="20"
+                            viewBox="0 0 16 16"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <circle
+                              cx="8"
+                              cy="8"
+                              r="7.25"
+                              stroke="currentColor"
+                              stroke-width="1.5"
+                            />
+                            <circle cx="8" cy="5.25" r="0.9" fill="currentColor" />
+                            <path
+                              d="M8 7.25V11.5"
+                              stroke="currentColor"
+                              stroke-width="1.5"
+                              stroke-linecap="round"
+                            />
+                          </svg>
+                        </span>
+                        <div class="wizard-info-box__body">
+                          <p class="wizard-info-box__title">Як зазначати кількість днів?</p>
+                          <p class="wizard-info-box__text">
+                            Для кожної винагороди вказуйте лише ті дні, коли вона була найбільшою
+                            серед усіх додаткових винагород, на які ви мали право. За один день
+                            враховується лише одна — найбільша — винагорода.
+                          </p>
+                          <p class="wizard-info-box__text">
+                            Наприклад, якщо в один день ви мали право на 100 000 грн і 30 000 грн,
+                            зазначте цей день лише для винагороди 100 000 грн.
+                          </p>
+                          <p class="wizard-info-box__text">
+                            За решту днів місяця тилову надбавку (10 000 грн за повний місяць) буде
+                            розраховано автоматично — пропорційно до кількості таких днів.
+                          </p>
+                        </div>
+                      </div>
+                      <div class="wizard-conditional" id="reward-group-combat-details" hidden>
+
+                      <div class="switch-group-card__item">
+                      <label class="switch-field" id="field-reward-combat_actions">
+                        <span class="switch-field__text">Участь у бойових діях <span class="switch-field__amount">100 000 грн за повний місяць</span></span>
+                        <input
+                          type="checkbox"
+                          class="switch-field__input"
+                          id="reward_combat_actions"
+                          name="reward_combat_actions"
+                          value="yes"
+                        />
+                        <span class="switch-field__ui" aria-hidden="true"></span>
+                      </label>
+                      <div
+                        class="field field--days wizard-step__section"
+                        id="field-days-combat_actions"
+                        data-days-pool="shared"
+                        hidden
+                        tabindex="-1"
+                      >
+                        <label class="field__legend" for="days-combat_actions">Кількість днів</label>
+                        <div
+                          class="tariff-stepper days-stepper"
+                          data-days-id="combat_actions"
+                          data-min="0"
+                        >
+                          <button
+                            type="button"
+                            class="stepper__btn days-dec"
+                            aria-label="Зменшити кількість днів"
+                          >
+                            −
+                          </button>
+                          <div class="tariff-stepper__input-shell">
+                            <input
+                              id="days-combat_actions"
+                              class="tariff-input days-input"
+                              name="days_combat_actions"
+                              type="text"
+                              inputmode="numeric"
+                              value="0"
+                              maxlength="2"
+                              autocomplete="off"
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            class="stepper__btn days-inc"
+                            aria-label="Збільшити кількість днів"
+                          >
+                            +
+                          </button>
+                        </div>
+                        <p class="field-hint" data-days-badge="additional" aria-live="polite">Можна вказати ще — днів</p>
+                        <p class="combat-share" data-reward-amount="combat_actions" aria-live="polite">
+                          Сума винагороди: —
+                        </p>
+                      </div>
+                      </div>
+                      <div class="switch-group-card__item">
+                      <label class="switch-field wizard-step__section" id="field-reward-command_posts">
+                        <span class="switch-field__text">Виконання завдань на пунктах управління <span class="switch-field__amount">50 000 грн за повний місяць</span></span>
+                        <input
+                          type="checkbox"
+                          class="switch-field__input"
+                          id="reward_command_posts"
+                          name="reward_command_posts"
+                          value="yes"
+                        />
+                        <span class="switch-field__ui" aria-hidden="true"></span>
+                      </label>
+                      <div
+                        class="field field--days wizard-step__section"
+                        id="field-days-command_posts"
+                        data-days-pool="shared"
+                        hidden
+                        tabindex="-1"
+                      >
+                        <label class="field__legend" for="days-command_posts">Кількість днів</label>
+                        <div
+                          class="tariff-stepper days-stepper"
+                          data-days-id="command_posts"
+                          data-min="0"
+                        >
+                          <button
+                            type="button"
+                            class="stepper__btn days-dec"
+                            aria-label="Зменшити кількість днів"
+                          >
+                            −
+                          </button>
+                          <div class="tariff-stepper__input-shell">
+                            <input
+                              id="days-command_posts"
+                              class="tariff-input days-input"
+                              name="days_command_posts"
+                              type="text"
+                              inputmode="numeric"
+                              value="0"
+                              maxlength="2"
+                              autocomplete="off"
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            class="stepper__btn days-inc"
+                            aria-label="Збільшити кількість днів"
+                          >
+                            +
+                          </button>
+                        </div>
+                        <p class="field-hint" data-days-badge="additional" aria-live="polite">Можна вказати ще — днів</p>
+                        <p class="combat-share" data-reward-amount="command_posts" aria-live="polite">
+                          Сума винагороди: —
+                        </p>
+                      </div>
+                      </div>
+                      <div class="switch-group-card__item">
+                      <label class="switch-field wizard-step__section" id="field-reward-combat_special">
+                        <span class="switch-field__text">Виконання бойових (спеціальних) завдань <span class="switch-field__amount">30 000 грн за повний місяць</span></span>
+                        <input
+                          type="checkbox"
+                          class="switch-field__input"
+                          id="reward_combat_special"
+                          name="reward_combat_special"
+                          value="yes"
+                        />
+                        <span class="switch-field__ui" aria-hidden="true"></span>
+                      </label>
+                      <div
+                        class="field field--days wizard-step__section"
+                        id="field-days-combat_special"
+                        data-days-pool="shared"
+                        hidden
+                        tabindex="-1"
+                      >
+                        <label class="field__legend" for="days-combat_special">Кількість днів</label>
+                        <div
+                          class="tariff-stepper days-stepper"
+                          data-days-id="combat_special"
+                          data-min="0"
+                        >
+                          <button
+                            type="button"
+                            class="stepper__btn days-dec"
+                            aria-label="Зменшити кількість днів"
+                          >
+                            −
+                          </button>
+                          <div class="tariff-stepper__input-shell">
+                            <input
+                              id="days-combat_special"
+                              class="tariff-input days-input"
+                              name="days_combat_special"
+                              type="text"
+                              inputmode="numeric"
+                              value="0"
+                              maxlength="2"
+                              autocomplete="off"
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            class="stepper__btn days-inc"
+                            aria-label="Збільшити кількість днів"
+                          >
+                            +
+                          </button>
+                        </div>
+                        <p class="field-hint" data-days-badge="additional" aria-live="polite">Можна вказати ще — днів</p>
+                        <p class="combat-share" data-reward-amount="combat_special" aria-live="polite">
+                          Сума винагороди: —
+                        </p>
+                      </div>
+                      </div>
+                      </div>
+                      </div>
+
                       <h3 class="wizard-section-title wizard-step__section">Підготовка особового складу</h3>
+                      <div class="switch-group-card">
                       <label class="switch-field wizard-step__section" id="field-reward-group-training">
                         <span class="switch-field__text">Чи обіймали посаду інструкторського складу?</span>
                         <input
@@ -1445,9 +1510,52 @@
                         />
                         <span class="switch-field__ui" aria-hidden="true"></span>
                       </label>
+                      <div class="wizard-info-box wizard-info-box--with-icon" role="note" hidden>
+                        <span class="wizard-info-box__icon" aria-hidden="true">
+                          <svg
+                            width="20"
+                            height="20"
+                            viewBox="0 0 16 16"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <circle
+                              cx="8"
+                              cy="8"
+                              r="7.25"
+                              stroke="currentColor"
+                              stroke-width="1.5"
+                            />
+                            <circle cx="8" cy="5.25" r="0.9" fill="currentColor" />
+                            <path
+                              d="M8 7.25V11.5"
+                              stroke="currentColor"
+                              stroke-width="1.5"
+                              stroke-linecap="round"
+                            />
+                          </svg>
+                        </span>
+                        <div class="wizard-info-box__body">
+                          <p class="wizard-info-box__title">Як зазначати кількість днів?</p>
+                          <p class="wizard-info-box__text">
+                            Для кожної винагороди вказуйте лише ті дні, коли вона була найбільшою
+                            серед усіх додаткових винагород, на які ви мали право. За один день
+                            враховується лише одна — найбільша — винагорода.
+                          </p>
+                          <p class="wizard-info-box__text">
+                            Наприклад, якщо в один день ви мали право на 30 000 грн і 15 000 грн,
+                            зазначте цей день лише для винагороди 30 000 грн.
+                          </p>
+                          <p class="wizard-info-box__text">
+                            За решту днів місяця тилову надбавку (10 000 грн за повний місяць) буде
+                            розраховано автоматично — пропорційно до кількості таких днів.
+                          </p>
+                        </div>
+                      </div>
                       <div class="wizard-conditional" id="reward-group-training-details" hidden>
+                      <div class="switch-group-card__item">
                       <label class="switch-field" id="field-reward-train_commander">
-                        <span class="switch-field__text">Командир інструкторського підрозділу (25 000 грн/міс)</span>
+                        <span class="switch-field__text">Командир інструкторського підрозділу <span class="switch-field__amount">25 000 грн за повний місяць</span></span>
                         <input
                           type="checkbox"
                           class="switch-field__input"
@@ -1497,12 +1605,15 @@
                             +
                           </button>
                         </div>
-                        <p class="wizard-days-badge wizard-days-badge--field" data-days-badge="additional" aria-live="polite">
-                          Можна вказати ще — днів
+                        <p class="field-hint" data-days-badge="additional" aria-live="polite">Можна вказати ще — днів</p>
+                        <p class="combat-share" data-reward-amount="train_commander" aria-live="polite">
+                          Сума винагороди: —
                         </p>
                       </div>
+                      </div>
+                      <div class="switch-group-card__item">
                       <label class="switch-field wizard-step__section" id="field-reward-train_basic">
-                        <span class="switch-field__text">Базовий сержантський / інструкторський рівень (15 000 грн/міс)</span>
+                        <span class="switch-field__text">Базовий сержантський / інструкторський рівень <span class="switch-field__amount">15 000 грн за повний місяць</span></span>
                         <input
                           type="checkbox"
                           class="switch-field__input"
@@ -1552,12 +1663,15 @@
                             +
                           </button>
                         </div>
-                        <p class="wizard-days-badge wizard-days-badge--field" data-days-badge="additional" aria-live="polite">
-                          Можна вказати ще — днів
+                        <p class="field-hint" data-days-badge="additional" aria-live="polite">Можна вказати ще — днів</p>
+                        <p class="combat-share" data-reward-amount="train_basic" aria-live="polite">
+                          Сума винагороди: —
                         </p>
                       </div>
+                      </div>
+                      <div class="switch-group-card__item">
                       <label class="switch-field wizard-step__section" id="field-reward-train_mid">
-                        <span class="switch-field__text">Середній сержантський рівень + підвищення кваліфікації інструкторів (25 000 грн/міс)</span>
+                        <span class="switch-field__text">Середній сержантський рівень + підвищення кваліфікації інструкторів <span class="switch-field__amount">25 000 грн за повний місяць</span></span>
                         <input
                           type="checkbox"
                           class="switch-field__input"
@@ -1607,12 +1721,15 @@
                             +
                           </button>
                         </div>
-                        <p class="wizard-days-badge wizard-days-badge--field" data-days-badge="additional" aria-live="polite">
-                          Можна вказати ще — днів
+                        <p class="field-hint" data-days-badge="additional" aria-live="polite">Можна вказати ще — днів</p>
+                        <p class="combat-share" data-reward-amount="train_mid" aria-live="polite">
+                          Сума винагороди: —
                         </p>
                       </div>
+                      </div>
+                      <div class="switch-group-card__item">
                       <label class="switch-field wizard-step__section" id="field-reward-train_advanced">
-                        <span class="switch-field__text">Вищий сержантський рівень + академічний інструктор (30 000 грн/міс)</span>
+                        <span class="switch-field__text">Вищий сержантський рівень + академічний інструктор <span class="switch-field__amount">30 000 грн за повний місяць</span></span>
                         <input
                           type="checkbox"
                           class="switch-field__input"
@@ -1662,12 +1779,15 @@
                             +
                           </button>
                         </div>
-                        <p class="wizard-days-badge wizard-days-badge--field" data-days-badge="additional" aria-live="polite">
-                          Можна вказати ще — днів
+                        <p class="field-hint" data-days-badge="additional" aria-live="polite">Можна вказати ще — днів</p>
+                        <p class="combat-share" data-reward-amount="train_advanced" aria-live="polite">
+                          Сума винагороди: —
                         </p>
                       </div>
+                      </div>
+                      <div class="switch-group-card__item">
                       <label class="switch-field wizard-step__section" id="field-reward-train_ubd">
-                        <span class="switch-field__text">Рівень підготовки не нижче базового + інструктор зі статусом УБД (30 000 грн/міс)</span>
+                        <span class="switch-field__text">Рівень підготовки не нижче базового + інструктор зі статусом УБД <span class="switch-field__amount">30 000 грн за повний місяць</span></span>
                         <input
                           type="checkbox"
                           class="switch-field__input"
@@ -1717,17 +1837,19 @@
                             +
                           </button>
                         </div>
-                        <p class="wizard-days-badge wizard-days-badge--field" data-days-badge="additional" aria-live="polite">
-                          Можна вказати ще — днів
+                        <p class="field-hint" data-days-badge="additional" aria-live="polite">Можна вказати ще — днів</p>
+                        <p class="combat-share" data-reward-amount="train_ubd" aria-live="polite">
+                          Сума винагороди: —
                         </p>
                       </div>
-                      <hr class="title-rule wizard-step__section" />
+                      </div>
+                      </div>
                       </div>
 
-                      <hr class="title-rule wizard-step__section" />
                       <h3 class="wizard-section-title wizard-step__section">Навчання або відпустка</h3>
+                      <div class="switch-group-card">
                       <label class="switch-field wizard-step__section" id="field-reward-training_leave">
-                        <span class="switch-field__text">Навчання або відпустка протягом обраного місяця</span>
+                        <span class="switch-field__text">Чи були періоди навчання чи відпустки?</span>
                         <input
                           type="checkbox"
                           class="switch-field__input"
@@ -1737,6 +1859,40 @@
                         />
                         <span class="switch-field__ui" aria-hidden="true"></span>
                       </label>
+                      <div class="wizard-info-box wizard-info-box--with-icon" role="note" hidden>
+                        <span class="wizard-info-box__icon" aria-hidden="true">
+                          <svg
+                            width="20"
+                            height="20"
+                            viewBox="0 0 16 16"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <circle
+                              cx="8"
+                              cy="8"
+                              r="7.25"
+                              stroke="currentColor"
+                              stroke-width="1.5"
+                            />
+                            <circle cx="8" cy="5.25" r="0.9" fill="currentColor" />
+                            <path
+                              d="M8 7.25V11.5"
+                              stroke="currentColor"
+                              stroke-width="1.5"
+                              stroke-linecap="round"
+                            />
+                          </svg>
+                        </span>
+                        <div class="wizard-info-box__body">
+                          <p class="wizard-info-box__title">Як зазначати кількість днів?</p>
+                          <p class="wizard-info-box__text">
+                            Вкажіть кількість днів навчання чи відпустки протягом обраного місяця.
+                            За решту днів місяця тилову надбавку (10 000 грн за повний місяць) буде
+                            розраховано автоматично - пропорційно до кількості таких днів.
+                          </p>
+                        </div>
+                      </div>
                       <div
                         class="field field--days wizard-step__section"
                         id="field-days-training_leave"
@@ -1777,9 +1933,8 @@
                             +
                           </button>
                         </div>
-                        <p class="wizard-days-badge wizard-days-badge--field" data-days-badge="additional" aria-live="polite">
-                          Можна вказати ще — днів
-                        </p>
+                        <p class="field-hint" data-days-badge="additional" aria-live="polite">Можна вказати ще — днів</p>
+                      </div>
                       </div>
                     </div>
 
@@ -1791,8 +1946,9 @@
                       hidden
                     >
                       <h3 class="wizard-section-title">Знищення живої сили противника</h3>
+                      <div class="switch-group-card">
                       <label class="switch-field wizard-step__section" id="field-has-enemies">
-                        <span class="switch-field__text">Чи було знищення живої сили противника у контактному/стрілецькому бою? (15 000 грн за кожного)</span>
+                        <span class="switch-field__text">Чи було знищення живої сили противника у контактному/стрілецькому бою? <span class="switch-field__amount">15 000 грн за кожного, ділиться між учасниками</span></span>
                         <input
                           type="checkbox"
                           class="switch-field__input"
@@ -1896,13 +2052,13 @@
                           Ваша частка винагороди за знищення: —
                         </p>
                       </div>
-                      <hr class="title-rule wizard-step__section" />
+                      </div>
                       </div>
 
-                      <hr class="title-rule wizard-step__section" />
                       <h3 class="wizard-section-title wizard-step__section">Взяття противника в полон</h3>
+                      <div class="switch-group-card">
                       <label class="switch-field wizard-step__section" id="field-has-prisoners">
-                        <span class="switch-field__text">Чи було взяття противника в полон? (100 000 грн за кожного)</span>
+                        <span class="switch-field__text">Чи було взяття противника в полон? <span class="switch-field__amount">100 000 грн за кожного, ділиться між учасниками</span></span>
                         <input
                           type="checkbox"
                           class="switch-field__input"
@@ -1967,6 +2123,7 @@
                         </p>
                       </div>
                       </div>
+                      </div>
                     </div>
 
                     <div
@@ -1976,8 +2133,9 @@
                       tabindex="-1"
                       hidden
                     >
+                      <div class="switch-group-card">
                       <label class="switch-field" id="field-has-violations">
-                        <span class="switch-field__text">У розрахунковому місяці чи були у вас порушення військової дисципліни або незадовільне виконання службових обов’язків?</span>
+                        <span class="switch-field__text">Чи були у вас порушення військової дисципліни або незадовільне виконання службових обов’язків у розрахунковому місяці?</span>
                         <input
                           type="checkbox"
                           class="switch-field__input"
@@ -1987,12 +2145,11 @@
                         />
                         <span class="switch-field__ui" aria-hidden="true"></span>
                       </label>
-
+                      <div class="wizard-conditional" id="discipline-details" hidden>
                       <div
-                        class="wizard-info-box wizard-info-box--with-icon wizard-step__section"
+                        class="wizard-info-box wizard-info-box--with-icon"
                         id="discipline-disclaimer"
                         role="note"
-                        hidden
                       >
                         <span class="wizard-info-box__icon" aria-hidden="true">
                           <svg
@@ -2030,6 +2187,192 @@
                             за розраховану калькулятором.
                           </p>
                         </div>
+                      </div>
+                        <fieldset class="field" id="field-violation-type">
+                          <legend class="field__legend">Тип порушення</legend>
+                          <div class="radio-row radio-row--wizard">
+                            <label class="radio-card">
+                              <input type="radio" name="violationType" value="disciplinary" />
+                              <span class="radio-card__ui"></span>
+                              <span class="radio-card__content">
+                                <span class="radio-card__text">Дисциплінарні порушення (догани)</span>
+                              </span>
+                            </label>
+                            <label class="radio-card">
+                              <input type="radio" name="violationType" value="service" />
+                              <span class="radio-card__ui"></span>
+                              <span class="radio-card__content">
+                                <span class="radio-card__text">Службові порушення</span>
+                              </span>
+                            </label>
+                            <label class="radio-card">
+                              <input type="radio" name="violationType" value="legal" />
+                              <span class="radio-card__ui"></span>
+                              <span class="radio-card__content">
+                                <span class="radio-card__text">Судові та правові наслідки</span>
+                              </span>
+                            </label>
+                            <label class="radio-card">
+                              <input type="radio" name="violationType" value="qualification" />
+                              <span class="radio-card__ui"></span>
+                              <span class="radio-card__content">
+                                <span class="radio-card__text">Кваліфікація та освіта</span>
+                              </span>
+                            </label>
+                          </div>
+                        </fieldset>
+                        <fieldset
+                          class="field wizard-step__section"
+                          id="field-disciplinary-violation"
+                          hidden
+                          tabindex="-1"
+                        >
+                          <legend class="field__legend">Порушення</legend>
+                          <div class="radio-row radio-row--wizard">
+                            <label class="radio-card">
+                              <input type="radio" name="disciplinaryViolation" value="reprimand" />
+                              <span class="radio-card__ui"></span>
+                              <span class="radio-card__content">
+                                <span class="radio-card__text">Дисциплінарне стягнення «догана»</span>
+                              </span>
+                            </label>
+                            <label class="radio-card">
+                              <input type="radio" name="disciplinaryViolation" value="severe_reprimand" />
+                              <span class="radio-card__ui"></span>
+                              <span class="radio-card__content">
+                                <span class="radio-card__text">Дисциплінарне стягнення «сувора догана»</span>
+                              </span>
+                            </label>
+                            <label class="radio-card">
+                              <input type="radio" name="disciplinaryViolation" value="two_reprimands" />
+                              <span class="radio-card__ui"></span>
+                              <span class="radio-card__content">
+                                <span class="radio-card__text"
+                                  >Два дисциплінарних стягнень «догана» («сувора догана»)</span
+                                >
+                              </span>
+                            </label>
+                            <label class="radio-card">
+                              <input type="radio" name="disciplinaryViolation" value="three_reprimands" />
+                              <span class="radio-card__ui"></span>
+                              <span class="radio-card__content">
+                                <span class="radio-card__text"
+                                  >Три дисциплінарних стягнень «догана» («сувора догана»)</span
+                                >
+                              </span>
+                            </label>
+                            <label class="radio-card">
+                              <input type="radio" name="disciplinaryViolation" value="more_than_three" />
+                              <span class="radio-card__ui"></span>
+                              <span class="radio-card__content">
+                                <span class="radio-card__text"
+                                  >Більше трьох дисциплінарних стягнень, крім дисциплінарного стягнення «зауваження»</span
+                                >
+                              </span>
+                            </label>
+                          </div>
+                        </fieldset>
+                        <fieldset
+                          class="field wizard-step__section"
+                          id="field-service-violation"
+                          hidden
+                          tabindex="-1"
+                        >
+                          <legend class="field__legend">Порушення</legend>
+                          <div class="radio-row radio-row--wizard">
+                            <label class="radio-card">
+                              <input type="radio" name="serviceViolation" value="absence" />
+                              <span class="radio-card__ui"></span>
+                              <span class="radio-card__content">
+                                <span class="radio-card__text">Невихід на службу (навчання) без поважних причин</span>
+                              </span>
+                            </label>
+                            <label class="radio-card">
+                              <input type="radio" name="serviceViolation" value="alcohol_drugs" />
+                              <span class="radio-card__ui"></span>
+                              <span class="radio-card__content">
+                                <span class="radio-card__text"
+                                  >Вживання алкогольних напоїв (наркотичних речовин) на території військової частини як у службовий, так і в позаслужбовий час, прибуття на службу в нетверезому стані (у стані наркотичного сп’яніння)</span
+                                >
+                              </span>
+                            </label>
+                          </div>
+                        </fieldset>
+                        <fieldset
+                          class="field wizard-step__section"
+                          id="field-legal-violation"
+                          hidden
+                          tabindex="-1"
+                        >
+                          <legend class="field__legend">Порушення</legend>
+                          <div class="radio-row radio-row--wizard">
+                            <label class="radio-card">
+                              <input type="radio" name="legalViolation" value="court_ruling" />
+                              <span class="radio-card__ui"></span>
+                              <span class="radio-card__content">
+                                <span class="radio-card__text"
+                                  >Постанова суду про накладення адміністративного стягнення за вчинення військового адміністративного правопорушення або адміністративного правопорушення, пов’язаного з корупцією</span
+                                >
+                              </span>
+                            </label>
+                            <label class="radio-card">
+                              <input type="radio" name="legalViolation" value="material_damage" />
+                              <span class="radio-card__ui"></span>
+                              <span class="radio-card__content">
+                                <span class="radio-card__text"
+                                  >Порушення вимог законів та інших нормативно-правових актів, які призвели до матеріальних збитків</span
+                                >
+                              </span>
+                            </label>
+                            <label class="radio-card">
+                              <input type="radio" name="legalViolation" value="accidents_deaths" />
+                              <span class="radio-card__ui"></span>
+                              <span class="radio-card__content">
+                                <span class="radio-card__text"
+                                  >Скоєння у військовій частині аварій, подій, пов’язаних із загибеллю людей з вини військовослужбовців під час виконання ними службових обов’язків, чи злочинів - за місяць, у якому сталася аварія, подія, пов’язана із загибеллю людей</span
+                                >
+                              </span>
+                            </label>
+                          </div>
+                        </fieldset>
+                        <fieldset
+                          class="field wizard-step__section"
+                          id="field-qualification-violation"
+                          hidden
+                          tabindex="-1"
+                        >
+                          <legend class="field__legend">Порушення</legend>
+                          <div class="radio-row radio-row--wizard">
+                            <label class="radio-card">
+                              <input type="radio" name="qualificationViolation" value="incomplete_fitness" />
+                              <span class="radio-card__ui"></span>
+                              <span class="radio-card__content">
+                                <span class="radio-card__text"
+                                  >Дисциплінарне стягнення у вигляді попередження про неповну службову відповідність, пониження в посаді, пониження у військовому званні на один ступінь, позбавлення військового звання</span
+                                >
+                              </span>
+                            </label>
+                            <label class="radio-card">
+                              <input type="radio" name="qualificationViolation" value="unsuccessful_studies" />
+                              <span class="radio-card__ui"></span>
+                              <span class="radio-card__content">
+                                <span class="radio-card__text"
+                                  >Неуспішне закінчення ад’юнктури або докторантури вищого військового навчального закладу, військового навчального підрозділу закладу вищої освіти або науково-дослідної установи</span
+                                >
+                              </span>
+                            </label>
+                            <label class="radio-card">
+                              <input type="radio" name="qualificationViolation" value="expulsion_studies" />
+                              <span class="radio-card__ui"></span>
+                              <span class="radio-card__content">
+                                <span class="radio-card__text"
+                                  >Відрахування з ад’юнктури або докторантури вищого військового навчального закладу, військового навчального підрозділу закладу вищої освіти або науково-дослідної установи через невиконання індивідуального навчального плану (індивідуального плану наукової роботи) або недисциплінованість</span
+                                >
+                              </span>
+                            </label>
+                          </div>
+                        </fieldset>
+                      </div>
                       </div>
                     </div>
                   </div>

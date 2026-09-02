@@ -37,6 +37,7 @@ def build_salary_calculator_browser() -> str:
     SERVICE_PLACE_CODE,
     NOPS_BY_POSITION,
     REWARD_DEFS,
+    PREMIUM_DEPRIVATION_PCT,
     round2,
     formatMoney,
     ovzForRankTitle,
@@ -81,6 +82,8 @@ def build_form_browser() -> None:
   const {{
     calculate,
     formatMoney,
+    round2,
+    REWARD_DEFS,
     buildResultLines,
     SSO_ALLOWANCE_PCT,
   }} = window.SalaryCalculator;

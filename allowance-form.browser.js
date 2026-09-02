@@ -116,6 +116,14 @@ const YEARS_PCT = Object.freeze({
   y6: 50,
 });
 
+/** Share of monthly bonus withheld for a disciplinary reprimand. Other violations: 100%. */
+const PREMIUM_DEPRIVATION_PCT = Object.freeze({
+  reprimand: 10,
+  severe_reprimand: 20,
+  two_reprimands: 40,
+  three_reprimands: 50,
+});
+
 const SECRECY_PCT = Object.freeze({
   none: { normal: 0, rso: 0 },
   secret: { normal: 10, rso: 30 },
@@ -370,6 +378,15 @@ function resolvePremiumPct(input) {
   return round2((row[idx] || 0) * factor);
 }
 
+function resolvePremiumDeprivationPct(input) {
+  if (!input.hasViolations) return 0;
+  const key = input.disciplinaryViolation;
+  if (key && PREMIUM_DEPRIVATION_PCT[key] != null) {
+    return PREMIUM_DEPRIVATION_PCT[key];
+  }
+  return 100;
+}
+
 function resolveClassPct(input) {
   if (input.classQualification === "medical") {
     const matrix = MEDICAL_CLASS_PCT[input.medicalQualCategory];
@@ -405,7 +422,11 @@ function calculate(input) {
   const nops = round2(((po + ovz + nvr) * nopsPct) / 100);
 
   const premiumPct = resolvePremiumPct(input);
-  const monthlyBonus = round2((po * premiumPct) / 100);
+  const monthlyBonusFull = round2((po * premiumPct) / 100);
+  const premiumDeprivationPct = resolvePremiumDeprivationPct(input);
+  const monthlyBonus = round2(
+    (monthlyBonusFull * (100 - premiumDeprivationPct)) / 100
+  );
 
   const livingWage = Number(input.livingWage) || LIVING_WAGE_DEFAULT;
   const ssoPct = Number(input.ssoAllowancePct) || 0;
@@ -568,6 +589,8 @@ function calculate(input) {
     nopsPct,
     nops,
     premiumPct,
+    monthlyBonusFull,
+    premiumDeprivationPct,
     monthlyBonus,
     livingWage,
     ssoPct,
@@ -694,12 +717,23 @@ function buildResultLines(result) {
       calc: `(${P(result.po)} ПО + ${P(result.ovz)} ОВЗ + ${P(result.nvr)} НВР) × ${result.nopsPct}%`,
     });
   }
-  if (result.monthlyBonus > 0) {
+  if (result.monthlyBonus > 0 || result.premiumDeprivationPct > 0) {
     lines.push({
       name: "Щомісячна премія",
       value: result.monthlyBonus,
       abbr: "ЩП",
       calc: `${P(result.po)} ПО × ${result.premiumPct}%`,
+      calcSuffix: result.premiumDeprivationPct
+        ? `− ${result.premiumDeprivationPct}% позбавлення`
+        : "",
+    });
+  }
+  if (result.hasViolations) {
+    lines.push({
+      name: "Щомісячна премія",
+      value: null,
+      error: "У разі наявності порушень фактична сума може бути менша",
+      nonBlocking: true,
     });
   }
   if (result.sso > 0) {
@@ -919,17 +953,6 @@ function buildResultLines(result) {
     rowType: "subtotal",
   });
 
-  if (result.hasViolations) {
-    lines.push({
-      name: "Порушення військової дисципліни",
-      value: null,
-      error:
-        "Окремі порушення можуть впливати на виплату щомісячної премії та додаткових винагород лише у разі їх письмового оформлення відповідним наказом (розпорядженням) командира (начальника). У таких випадках фактична сума виплат може бути меншою за розраховану калькулятором.",
-      calc: "",
-      nonBlocking: true,
-    });
-  }
-
   if (result.militaryTaxNet > 0) {
     lines.push({
       name: "Військовий збір (1,5%)",
@@ -978,6 +1001,7 @@ function buildResultLines(result) {
     SERVICE_PLACE_CODE,
     NOPS_BY_POSITION,
     REWARD_DEFS,
+    PREMIUM_DEPRIVATION_PCT,
     round2,
     formatMoney,
     ovzForRankTitle,
@@ -1002,34 +1026,12 @@ const NOPS_CATEGORIES = Object.freeze([
     id: "medicine",
     label: "Медицина",
     items: [
-      item("med_infect", "Інфекційні клініки, відділення, палати та ізолятори", 68.3),
-      item("med_helminth", "Підрозділи для гельмінтологічних хворих", 68.3),
-      item("med_burn", "Підрозділи для опікових і спінальних хворих", 68.3),
-      item("med_neuro", "Неврологічні відділення порушень мозкового кровообігу", 68.3),
-      item("med_kidney", "Відділення з апаратом «Штучна нирка»", 68.3),
-      item("med_allergy", "Алергологічні кабінети", 68.3),
-      item("med_epidemic", "Епідеміологічні, лабораторні та санітарні підрозділи", 68.3),
-      item("med_purulent", "Відділення гнійної хірургії", 68.3),
-      item("med_derma", "Шкірно-венерологічні підрозділи", 68.3),
-      item("med_endo", "Малоінвазивна хірургія та ендоскопія", 68.3),
-      item("med_imaging", "Кабінети УЗД, КТ та МРТ", 68.3),
-      item("med_blood", "Центри крові, трансфузіологія та кріоконсервування", 68.3),
-      item("med_prevent_lead", "Керівники установ превентивної медицини", 68.3),
-      item("med_bact", "Бактеріологічні та вірусологічні дослідження в медпідрозділах", 68.3),
-      item("med_icu", "Медперсонал анестезіології, реанімації, інтенсивної терапії та оксигенації", 68.3),
-      item("med_surgeons", "Хірурги, ендоскопісти й анестезіологи в медпідрозділах", 68.3),
-      item("med_lab_live", "Лабораторний медперсонал: живі збудники або хворі тварини", 68.3),
-      item("med_viruses", "Робота з патогенними вірусами", 68.3),
-      item("med_chem_allergens", "Робота з хімічними алергенами, визначеними МОЗ", 68.3),
-      item("med_yevpatoria", "Лікарі Євпаторійського санаторію, які лікують психоневрологічних хворих", 68.3),
-      item("med_radiation", "Радіаційні роботи та обов’язки рентгенолога за наказом", 68.3),
-      item("med_outbreaks", "Робота в осередках інфекцій за наказом (крім чуми й холери)", 68.3),
-      item("med_patho_nonmed", "Немедичний склад патолого-анатомічних підрозділів", 68.3),
-      item("med_tb", "Туберкульозні відділення та клініки", 71.5),
-      item("med_tb_wards", "Палати та ізолятори для хворих на туберкульоз", 71.5),
-      item("med_patho_med", "Медичний склад патолого-анатомічних підрозділів", 71.5),
-      item("med_tb_lab", "Лабораторні дослідження туберкульозних та інфекційних підрозділів", 71.5),
-      item("med_psych", "Психіатричні та психоневрологічні підрозділи", 71.5),
+      item("med_general", "Медичні підрозділи загального профілю", 68.3),
+      item(
+        "med_tb_psych",
+        "Туберкульозні, психіатричні та патолого-анатомічні підрозділи",
+        71.5
+      ),
       item("med_operating", "Хірурги, ендоскопісти й анестезіологи, які оперують у госпіталях", 78),
       item("med_immuno", "Лабораторії інфекційної імунології", 100),
     ],
@@ -1049,11 +1051,10 @@ const NOPS_CATEGORIES = Object.freeze([
     items: [
       item("spec_underground", "Служба глибше 20 м або в захищених пунктах управління", 68.3),
       item(
-        "spec_listed_units",
-        "Військовослужбовці частин А1556, А1778, А1927, А4267, А3715, А3892, А3029, А3620, А0952",
+        "spec_listed_zmiinyi",
+        "Військовослужбовці частин А1556, А1778, А1927, А4267, А3715, А3892, А3029, А3620 та охорона острова Зміїний",
         100
       ),
-      item("spec_zmiinyi", "Охорона та оборона острова Зміїний", 100),
     ],
   },
   {
@@ -1075,20 +1076,18 @@ const NOPS_CATEGORIES = Object.freeze([
       item("armor_commanders", "Командири й старші механіки-водії танків та гаубичних САУ", 78),
       item(
         "armor_crews",
-        "Екіпажі танків, САУ, ЗСУ, БМП, розвідувальних і десантних машин",
+        "Екіпажі танків, САУ, ЗСУ, БМП, розвідувальних і десантних машин та інструктори водіння",
         84.5
       ),
-      item("armor_instructors", "Інструктори водіння танків і САУ зі штату екіпажу", 84.5),
     ],
   },
   {
     id: "aviation",
     label: "Авіація",
     items: [
-      item("avia_safety", "Наземні авіафахівці з безпеки польотів (за переліком)", 78),
       item(
-        "avia_test_ground",
-        "Наземний інженерно-технічний склад авіаційних випробувань (за переліком)",
+        "avia_ground",
+        "Наземний авіаційний склад: безпека польотів і випробування (за переліком)",
         78
       ),
       item("avia_cabin", "Льотний склад пасажирського та вантажного салону", 100, {
@@ -1167,14 +1166,8 @@ const NOPS_CATEGORIES = Object.freeze([
     label: "Снайпери",
     items: [
       item(
-        "sniper_sso_groups",
-        "Сертифіковані снайпери груп спецпризначення центрів спеціальних операцій",
-        100,
-        { premiumPct: 630 }
-      ),
-      item(
-        "sniper_a2772",
-        "Сертифіковані снайпери групи підготовки А2772 (без змінного складу)",
+        "sniper_sso_a2772",
+        "Сертифіковані снайпери груп спецпризначення ССО і групи підготовки А2772 (без змінного складу)",
         100,
         { premiumPct: 630 }
       ),
@@ -1262,6 +1255,8 @@ function formatNopsPct(value) {
   const {
     calculate,
     formatMoney,
+    round2,
+    REWARD_DEFS,
     buildResultLines,
     SSO_ALLOWANCE_PCT,
   } = window.SalaryCalculator;
@@ -1310,6 +1305,7 @@ const WIZARD_STEPS = [
   "conditions",
   "qualification",
   "rewards",
+  "rewards_additional",
   "combat_results",
   "discipline",
 ];
@@ -1317,31 +1313,35 @@ const WIZARD_STEPS = [
 const STEP_META = {
   basics: {
     title: "Звання та тарифний розряд",
-    help: "Оберіть рівень звання, конкретне звання та тарифний розряд.",
+    help: "Оберіть ваше звання та тарифний розряд.",
   },
   years: {
     title: "Вислуга років",
-    help: "Оберіть повні роки вислуги, без урахування місяців.",
+    help: "Вкажіть вашу вислугу.",
   },
   conditions: {
     title: "Умови військової служби",
-    help: "Оберіть місце проходження служби та розмір надбавки за особливості проходження служби (НОПС).",
+    help: "Вкажіть, де ви проходите службу, та розмір надбавки за її особливості.",
   },
   qualification: {
     title: "Секретність, кваліфікація та додаткові звання",
-    help: "Цей розділ заповнюється лише за наявності ступеня секретності, шифрувального стажу чи підстав на додаткові види нарахування.",
-  },
-  discipline: {
-    title: "Дисципліна",
-    help: "Йдеться про догани, невиходи на службу (навчання) чи інші суттєві порушення. Ознака не змінює розраховану суму автоматично.",
+    help: "Заповніть, якщо у вас є ступінь секретності, класна кваліфікація або додаткові звання.",
   },
   rewards: {
-    title: "Період і винагороди",
-    help: "Оберіть місяць і рік, потім вкажіть одноразові, додаткові та штурмові винагороди.",
+    title: "Одноразові та штурмові винагороди",
+    help: "Оберіть розрахунковий місяць і вкажіть ваші одноразові та штурмові винагороди.",
+  },
+  rewards_additional: {
+    title: "Додаткові винагороди",
+    help: "Вкажіть ваші додаткові винагороди, підготовку особового складу та дні навчання чи відпустки.",
   },
   combat_results: {
     title: "Винагороди за полонених і знищення",
-    help: "15 000 грн за кожного знищеного та 100 000 грн за кожного полоненого. Калькулятор ділить винагороду порівну між усіма учасниками.",
+    help: "Вкажіть кількість полонених або знищених і скільки осіб брали участь.",
+  },
+  discipline: {
+    title: "Дисципліна",
+    help: "Якщо у вас були порушення, оберіть тип і конкретне порушення.",
   },
 };
 
@@ -1349,7 +1349,7 @@ const RANK_LABELS = {
   r1: "Рядовий",
   r2: "Сержантський / старшинський",
   r3: "Офіцерський",
-  r4: "Вищий офіцерський (генерали / адмірали)",
+  r4: "Вищий офіцерський",
 };
 
 const RANK_TITLES = {
@@ -1428,6 +1428,20 @@ const SERVICE_PLACE_LABELS = {
 const NOPS_MODE_LABELS = {
   default: "За замовчуванням",
   other: "Інша",
+};
+
+const DEFAULT_NOPS_PCT_BY_PLACE = {
+  general: 65,
+  sso: 87.8,
+  dshv_vms: 87.8,
+  a0952: 100,
+};
+
+/** Branch NOPS already implied by service place — hide from «Інша». */
+const NOPS_BRANCH_CATEGORY_IDS = {
+  sso: true,
+  dshv: true,
+  navy: true,
 };
 
 const SSO_POSITION_LABELS = {
@@ -1515,6 +1529,73 @@ const HAS_VIOLATIONS_LABELS = {
   yes: "Так",
 };
 
+const VIOLATION_TYPE_LABELS = {
+  disciplinary: "Дисциплінарні порушення (догани)",
+  service: "Службові порушення",
+  legal: "Судові та правові наслідки",
+  qualification: "Кваліфікація та освіта",
+};
+
+const DISCIPLINARY_VIOLATION_LABELS = {
+  reprimand: "Дисциплінарне стягнення «догана»",
+  severe_reprimand: "Дисциплінарне стягнення «сувора догана»",
+  two_reprimands: "Два дисциплінарних стягнень «догана» («сувора догана»)",
+  three_reprimands: "Три дисциплінарних стягнень «догана» («сувора догана»)",
+  more_than_three:
+    "Більше трьох дисциплінарних стягнень, крім дисциплінарного стягнення «зауваження»",
+};
+
+const SERVICE_VIOLATION_LABELS = {
+  absence: "Невихід на службу (навчання) без поважних причин",
+  alcohol_drugs:
+    "Вживання алкогольних напоїв (наркотичних речовин) на території військової частини як у службовий, так і в позаслужбовий час, прибуття на службу в нетверезому стані (у стані наркотичного сп’яніння)",
+};
+
+const LEGAL_VIOLATION_LABELS = {
+  court_ruling:
+    "Постанова суду про накладення адміністративного стягнення за вчинення військового адміністративного правопорушення або адміністративного правопорушення, пов’язаного з корупцією",
+  material_damage:
+    "Порушення вимог законів та інших нормативно-правових актів, які призвели до матеріальних збитків",
+  accidents_deaths:
+    "Скоєння у військовій частині аварій, подій, пов’язаних із загибеллю людей з вини військовослужбовців під час виконання ними службових обов’язків, чи злочинів - за місяць, у якому сталася аварія, подія, пов’язана із загибеллю людей",
+};
+
+const QUALIFICATION_VIOLATION_LABELS = {
+  incomplete_fitness:
+    "Дисциплінарне стягнення у вигляді попередження про неповну службову відповідність, пониження в посаді, пониження у військовому званні на один ступінь, позбавлення військового звання",
+  unsuccessful_studies:
+    "Неуспішне закінчення ад’юнктури або докторантури вищого військового навчального закладу, військового навчального підрозділу закладу вищої освіти або науково-дослідної установи",
+  expulsion_studies:
+    "Відрахування з ад’юнктури або докторантури вищого військового навчального закладу, військового навчального підрозділу закладу вищої освіти або науково-дослідної установи через невиконання індивідуального навчального плану (індивідуального плану наукової роботи) або недисциплінованість",
+};
+
+const VIOLATION_DETAIL_FIELDS = [
+  {
+    type: "disciplinary",
+    fieldId: "field-disciplinary-violation",
+    name: "disciplinaryViolation",
+    labels: DISCIPLINARY_VIOLATION_LABELS,
+  },
+  {
+    type: "service",
+    fieldId: "field-service-violation",
+    name: "serviceViolation",
+    labels: SERVICE_VIOLATION_LABELS,
+  },
+  {
+    type: "legal",
+    fieldId: "field-legal-violation",
+    name: "legalViolation",
+    labels: LEGAL_VIOLATION_LABELS,
+  },
+  {
+    type: "qualification",
+    fieldId: "field-qualification-violation",
+    name: "qualificationViolation",
+    labels: QUALIFICATION_VIOLATION_LABELS,
+  },
+];
+
 const MONTH_LABELS = {
   "1": "Січень",
   "2": "Лютий",
@@ -1552,16 +1633,6 @@ const TRAINING_LEAVE_ID = "training_leave";
 
 const REWARD_GROUPS = [
   {
-    id: "combat",
-    rewardIds: REWARD_GROUP_COMBAT_IDS,
-    summaryLabel: "Бойові або службові завдання з додатковою винагородою",
-  },
-  {
-    id: "training",
-    rewardIds: REWARD_GROUP_TRAINING_IDS,
-    summaryLabel: "Обіймали посаду інструкторського складу",
-  },
-  {
     id: "onetime",
     rewardIds: REWARD_GROUP_ONETIME_IDS,
     summaryLabel: "Одноразові винагороди",
@@ -1571,7 +1642,25 @@ const REWARD_GROUPS = [
     rewardIds: REWARD_GROUP_ASSAULT_IDS,
     summaryLabel: "Винагороди за штурмові дії",
   },
+  {
+    id: "combat",
+    rewardIds: REWARD_GROUP_COMBAT_IDS,
+    summaryLabel: "Бойові або службові завдання з додатковою винагородою",
+  },
+  {
+    id: "training",
+    rewardIds: REWARD_GROUP_TRAINING_IDS,
+    summaryLabel: "Обіймали посаду інструкторського складу",
+  },
 ];
+
+const REWARD_GROUPS_PRIMARY = REWARD_GROUPS.filter(function (group) {
+  return group.id === "onetime" || group.id === "assault";
+});
+
+const REWARD_GROUPS_ADDITIONAL = REWARD_GROUPS.filter(function (group) {
+  return group.id === "combat" || group.id === "training";
+});
 
 const ALL_REWARD_IDS = REWARD_GROUP_COMBAT_IDS.concat(
   REWARD_GROUP_TRAINING_IDS,
@@ -1581,23 +1670,23 @@ const ALL_REWARD_IDS = REWARD_GROUP_COMBAT_IDS.concat(
 );
 
 const REWARD_LABELS = {
-  combat_actions: "Участь у бойових діях (100 000 грн/міс)",
-  command_posts: "Виконання завдань на пунктах управління (50 000 грн/міс)",
-  combat_special: "Виконання бойових (спеціальних) завдань (30 000 грн/міс)",
-  train_commander: "Командир інструкторського підрозділу (25 000 грн/міс)",
+  combat_actions: "Участь у бойових діях (100 000 грн за повний місяць)",
+  command_posts: "Виконання завдань на пунктах управління (50 000 грн за повний місяць)",
+  combat_special: "Виконання бойових (спеціальних) завдань (30 000 грн за повний місяць)",
+  train_commander: "Командир інструкторського підрозділу (25 000 грн за повний місяць)",
   train_basic:
-    "Базовий сержантський / інструкторський рівень (15 000 грн/міс)",
+    "Базовий сержантський / інструкторський рівень (15 000 грн за повний місяць)",
   train_mid:
-    "Середній сержантський рівень + підвищення кваліфікації інструкторів (25 000 грн/міс)",
+    "Середній сержантський рівень + підвищення кваліфікації інструкторів (25 000 грн за повний місяць)",
   train_advanced:
-    "Вищий сержантський рівень + академічний інструктор (30 000 грн/міс)",
+    "Вищий сержантський рівень + академічний інструктор (30 000 грн за повний місяць)",
   train_ubd:
-    "Рівень підготовки не нижче базового + інструктор зі статусом УБД (30 000 грн/міс)",
-  training_leave: "Навчання або відпустка протягом обраного місяця",
+    "Рівень підготовки не нижче базового + інструктор зі статусом УБД (30 000 грн за повний місяць)",
+  training_leave: "Чи були періоди навчання чи відпустки?",
   stronghold_platoon:
-    "Виконання бойових завдань до взводного опорного пункту (170 000 грн/міс)",
+    "Виконання бойових завдань до взводного опорного пункту (170 000 грн за повний місяць)",
   stronghold_company:
-    "Виконання бойових завдань до ротного опорного пункту (70 000 грн/міс)",
+    "Виконання бойових завдань до ротного опорного пункту (70 000 грн за повний місяць)",
   restore_positions: "Відновлення позицій (20 000 грн/добу)",
   capture_positions: "Захоплення позицій (40 000 грн/добу)",
 };
@@ -1806,6 +1895,72 @@ function isYearsFilled() {
   return Boolean(getSelectedValue("years"));
 }
 
+function getDefaultNopsPct() {
+  const place = getSelectedValue("servicePlace");
+  if (place && DEFAULT_NOPS_PCT_BY_PLACE[place] != null) {
+    return DEFAULT_NOPS_PCT_BY_PLACE[place];
+  }
+  return 65;
+}
+
+function formatNopsRadioTerm(value) {
+  return "НОПС: " + formatNopsPct(value);
+}
+
+function syncNopsDefaultPct() {
+  const el = document.getElementById("nops-default-pct");
+  if (!el) return;
+  el.hidden = false;
+  el.textContent = formatNopsRadioTerm(getDefaultNopsPct());
+}
+
+function isNopsCategoryAllowed(categoryId) {
+  return !NOPS_BRANCH_CATEGORY_IDS[categoryId];
+}
+
+function isNopsSpecAllowed(spec) {
+  if (!spec) return false;
+  if (
+    spec.id === "spec_listed_zmiinyi" &&
+    getSelectedValue("servicePlace") === "a0952"
+  ) {
+    return false;
+  }
+  return true;
+}
+
+function getVisibleNopsSpecs(category) {
+  if (!category) return [];
+  return category.items.filter(isNopsSpecAllowed);
+}
+
+function nopsSpecCalcKey(spec) {
+  return [
+    spec.nopsPct,
+    spec.premiumPct == null ? "" : spec.premiumPct,
+    spec.premiumPctSso == null ? "" : spec.premiumPctSso,
+    spec.premiumPctDshv == null ? "" : spec.premiumPctDshv,
+    spec.isPilot ? "1" : "0",
+    spec.needsSsoPosition ? "1" : "0",
+  ].join("|");
+}
+
+function nopsCategorySkipsSpecialization(category) {
+  const items = getVisibleNopsSpecs(category);
+  if (!items.length) return false;
+  const key = nopsSpecCalcKey(items[0]);
+  for (let i = 1; i < items.length; i += 1) {
+    if (nopsSpecCalcKey(items[i]) !== key) return false;
+  }
+  return true;
+}
+
+function nopsCategoryDisplayPct(category) {
+  if (!nopsCategorySkipsSpecialization(category)) return null;
+  const items = getVisibleNopsSpecs(category);
+  return items.length ? items[0].nopsPct : null;
+}
+
 function requiresNopsDetails() {
   return getSelectedValue("nopsMode") === "other";
 }
@@ -1824,9 +1979,17 @@ function requiresSsoPosition() {
 
 function fillNopsCategoryRadios() {
   if (!nopsCategoryOptions) return;
-  const current = getSelectedValue("nopsCategory");
+  let current = getSelectedValue("nopsCategory");
+  if (current && !isNopsCategoryAllowed(current)) {
+    clearChecked("nopsCategory");
+    current = null;
+  }
   nopsCategoryOptions.replaceChildren();
   NOPS_CATEGORIES.forEach(function (category) {
+    if (!isNopsCategoryAllowed(category.id)) return;
+    const visibleItems = category.items.filter(isNopsSpecAllowed);
+    if (!visibleItems.length) return;
+
     const label = document.createElement("label");
     label.className = "radio-card";
 
@@ -1849,6 +2012,13 @@ function fillNopsCategoryRadios() {
     label.appendChild(input);
     label.appendChild(ui);
     label.appendChild(content);
+    const displayPct = nopsCategoryDisplayPct(category);
+    if (displayPct != null) {
+      const percent = document.createElement("span");
+      percent.className = "radio-card__term";
+      percent.textContent = formatNopsRadioTerm(displayPct);
+      content.appendChild(percent);
+    }
     nopsCategoryOptions.appendChild(label);
   });
 
@@ -1863,16 +2033,30 @@ function onNopsCategoryChange() {
 
 function fillNopsSpecializationRadios(categoryId) {
   if (!nopsSpecializationOptions) return;
-  const nextId = categoryId || "";
+  const place = getSelectedValue("servicePlace") || "";
+  const nextId = (categoryId || "") + "|" + place;
   if (nextId === filledNopsSpecCategoryId) return;
 
-  const current = getSelectedValue("nopsSpecialization");
+  let current = getSelectedValue("nopsSpecialization");
+  const currentSpec = current ? getNopsSpecialization(current) : null;
+  if (current && !isNopsSpecAllowed(currentSpec)) {
+    clearChecked("nopsSpecialization");
+    current = null;
+  }
   nopsSpecializationOptions.replaceChildren();
   filledNopsSpecCategoryId = nextId;
-  const category = getNopsCategory(nextId);
+  const category = getNopsCategory(categoryId || "");
   if (!category) return;
 
-  category.items.forEach(function (spec) {
+  const visible = getVisibleNopsSpecs(category);
+  if (nopsCategorySkipsSpecialization(category) && visible.length) {
+    const currentAllowed = visible.some(function (spec) {
+      return spec.id === current;
+    });
+    if (!currentAllowed) current = visible[0].id;
+  }
+
+  visible.forEach(function (spec) {
     const label = document.createElement("label");
     label.className = "radio-card";
 
@@ -1893,13 +2077,13 @@ function fillNopsSpecializationRadios(categoryId) {
     content.appendChild(textEl);
 
     const percent = document.createElement("span");
-    percent.className = "radio-card__percent";
-    percent.textContent = formatNopsPct(spec.nopsPct);
+    percent.className = "radio-card__term";
+    percent.textContent = formatNopsRadioTerm(spec.nopsPct);
+    content.appendChild(percent);
 
     label.appendChild(input);
     label.appendChild(ui);
     label.appendChild(content);
-    label.appendChild(percent);
     nopsSpecializationOptions.appendChild(label);
   });
 
@@ -1911,12 +2095,24 @@ function fillNopsSpecializationRadios(categoryId) {
 }
 
 function syncNopsFields() {
+  const place = getSelectedValue("servicePlace");
+  if (place && !getSelectedValue("nopsMode")) {
+    const nopsDefault = document.querySelector(
+      'input[name="nopsMode"][value="default"]'
+    );
+    if (nopsDefault) nopsDefault.checked = true;
+  }
+
+  syncNopsDefaultPct();
   const show = requiresNopsDetails();
+  fillNopsCategoryRadios();
   const categoryId = getSelectedValue("nopsCategory");
+  const category = categoryId ? getNopsCategory(categoryId) : null;
+  const skipSpec = nopsCategorySkipsSpecialization(category);
   const categoryField = document.getElementById("field-nops-category");
   const specField = document.getElementById("field-nops-specialization");
   if (categoryField) categoryField.hidden = !show;
-  if (specField) specField.hidden = !(show && categoryId);
+  if (specField) specField.hidden = !(show && categoryId && !skipSpec);
   if (!show) {
     clearChecked("nopsCategory");
     fillNopsSpecializationRadios("");
@@ -1964,8 +2160,7 @@ function getSecrecyValue() {
 }
 
 function requiresRsoAffiliation() {
-  const secrecy = getSecrecyValue();
-  return secrecy === "secret" || secrecy === "top_secret" || secrecy === "special";
+  return hasSecrecyLevel();
 }
 
 function syncSecrecyFields() {
@@ -1974,17 +2169,6 @@ function syncSecrecyFields() {
   if (details) details.hidden = !show;
   if (!show) {
     clearChecked("secrecy");
-  }
-  syncRsoField();
-}
-
-function syncRsoField() {
-  const field = document.getElementById("field-rso");
-  if (!field) return;
-
-  const show = requiresRsoAffiliation();
-  field.hidden = !show;
-  if (!show) {
     clearChecked("rsoAffiliation");
   }
 }
@@ -2119,14 +2303,37 @@ function requiresViolationType() {
   return getYesNoValue("hasViolations") === "yes";
 }
 
+function syncDisciplineFields() {
+  const details = document.getElementById("discipline-details");
+  const show = requiresViolationType();
+  if (details) details.hidden = !show;
+
+  if (!show) {
+    clearChecked("violationType");
+  }
+
+  const type = show ? getSelectedValue("violationType") : null;
+  VIOLATION_DETAIL_FIELDS.forEach(function (item) {
+    const field = document.getElementById(item.fieldId);
+    const itemShow = Boolean(type && type === item.type);
+    if (field) field.hidden = !itemShow;
+    if (!itemShow) clearChecked(item.name);
+  });
+}
+
 function syncDisciplineDisclaimer() {
-  const box = document.getElementById("discipline-disclaimer");
-  if (!box) return;
-  box.hidden = !requiresViolationType();
+  syncDisciplineFields();
 }
 
 function isDisciplineFilled() {
-  return getYesNoValue("hasViolations") != null;
+  if (getYesNoValue("hasViolations") !== "yes") return true;
+  const type = getSelectedValue("violationType");
+  if (!type) return false;
+  for (let i = 0; i < VIOLATION_DETAIL_FIELDS.length; i += 1) {
+    const item = VIOLATION_DETAIL_FIELDS[i];
+    if (item.type === type) return Boolean(getSelectedValue(item.name));
+  }
+  return false;
 }
 
 function getDefaultSettlementDate() {
@@ -2241,6 +2448,11 @@ function syncRewardDaysField(rewardId) {
     const input = getDaysInput(rewardId);
     if (input) input.value = "0";
   }
+  const card = field.parentElement;
+  if (card && card.classList.contains("switch-group-card")) {
+    const info = card.querySelector(":scope > .wizard-info-box");
+    if (info) info.hidden = !show;
+  }
 }
 
 function syncRewardGroupDetails(group) {
@@ -2249,6 +2461,12 @@ function syncRewardGroupDetails(group) {
 
   const show = getRewardGroupChoice(group.id) === "yes";
   details.hidden = !show;
+
+  const card = details.parentElement;
+  if (card) {
+    const info = card.querySelector(":scope > .wizard-info-box");
+    if (info) info.hidden = !show;
+  }
 
   if (!show) {
     group.rewardIds.forEach(clearRewardItem);
@@ -2282,6 +2500,12 @@ const ADDITIONAL_POOL_IDS = REWARD_GROUP_COMBAT_IDS.concat(
 const ONETIME_POOL_IDS = REWARD_GROUP_ONETIME_IDS.slice();
 const ASSAULT_POOL_IDS = REWARD_GROUP_ASSAULT_IDS.slice();
 
+function getRewardPoolIds(rewardId) {
+  if (ONETIME_POOL_IDS.indexOf(rewardId) !== -1) return ONETIME_POOL_IDS;
+  if (ASSAULT_POOL_IDS.indexOf(rewardId) !== -1) return ASSAULT_POOL_IDS;
+  return ADDITIONAL_POOL_IDS;
+}
+
 function daysWord(n) {
   const abs = Math.abs(Number(n));
   const mod10 = abs % 10;
@@ -2311,10 +2535,33 @@ function setDaysBadges(pool, used, monthDays) {
 
 function updateDaysBadges() {
   const monthDays = getDaysInSettlementMonth();
-  const additionalUsed = sumPoolDays(ADDITIONAL_POOL_IDS);
-  setDaysBadges("additional", additionalUsed, monthDays);
+  setDaysBadges("additional", sumPoolDays(ADDITIONAL_POOL_IDS), monthDays);
   setDaysBadges("onetime", sumPoolDays(ONETIME_POOL_IDS), monthDays);
   setDaysBadges("assault", sumPoolDays(ASSAULT_POOL_IDS), monthDays);
+}
+
+function formatRewardLiveAmount(value) {
+  return formatMoney(value) + " грн";
+}
+
+function computeRewardLiveAmount(rewardId, days, monthDays) {
+  const def = REWARD_DEFS[rewardId];
+  if (!def || def.amount <= 0 || monthDays == null || monthDays <= 0) return null;
+  if (def.kind === "storm") return round2(def.amount * days);
+  return round2((def.amount / monthDays) * days);
+}
+
+function updateRewardAmounts() {
+  const monthDays = getDaysInSettlementMonth();
+  document.querySelectorAll("[data-reward-amount]").forEach(function (el) {
+    const id = el.getAttribute("data-reward-amount");
+    const parsed = parseDaysValue(id);
+    const amount =
+      parsed.ok ? computeRewardLiveAmount(id, parsed.n, monthDays) : null;
+    el.textContent =
+      "Сума винагороди: " +
+      (amount == null ? "—" : formatRewardLiveAmount(amount));
+  });
 }
 
 function poolExceeds(rewardIds, monthDays) {
@@ -2343,22 +2590,32 @@ function isPeriodFilled() {
   return parseSettlementYear().ok;
 }
 
-function isRewardsFilled() {
-  const monthDays = getDaysInSettlementMonth();
-  if (monthDays == null) return false;
-
-  for (let i = 0; i < REWARD_GROUPS.length; i += 1) {
-    const group = REWARD_GROUPS[i];
+function areRewardGroupsFilled(groups) {
+  for (let i = 0; i < groups.length; i += 1) {
+    const group = groups[i];
     const choice = getRewardGroupChoice(group.id);
     if (!choice) return false;
     if (choice === "yes" && !areRewardItemsFilled(group.rewardIds)) return false;
   }
+  return true;
+}
 
-  if (!areRewardItemsFilled([TRAINING_LEAVE_ID])) return false;
-
-  if (poolExceeds(ADDITIONAL_POOL_IDS, monthDays)) return false;
+function isRewardsPrimaryFilled() {
+  const monthDays = getDaysInSettlementMonth();
+  if (monthDays == null) return false;
+  if (!isPeriodFilled()) return false;
+  if (!areRewardGroupsFilled(REWARD_GROUPS_PRIMARY)) return false;
   if (poolExceeds(ONETIME_POOL_IDS, monthDays)) return false;
   if (poolExceeds(ASSAULT_POOL_IDS, monthDays)) return false;
+  return true;
+}
+
+function isRewardsAdditionalFilled() {
+  const monthDays = getDaysInSettlementMonth();
+  if (monthDays == null) return false;
+  if (!areRewardGroupsFilled(REWARD_GROUPS_ADDITIONAL)) return false;
+  if (!areRewardItemsFilled([TRAINING_LEAVE_ID])) return false;
+  if (poolExceeds(ADDITIONAL_POOL_IDS, monthDays)) return false;
   return true;
 }
 
@@ -2439,7 +2696,9 @@ function isStepFilled(stepId) {
     case "discipline":
       return isDisciplineFilled();
     case "rewards":
-      return isPeriodFilled() && isRewardsFilled();
+      return isRewardsPrimaryFilled();
+    case "rewards_additional":
+      return isRewardsAdditionalFilled();
     case "combat_results":
       return isCombatResultsFilled();
     default:
@@ -2449,12 +2708,15 @@ function isStepFilled(stepId) {
 
 function validateCurrentStep(stepId) {
   if (!isStepFilled(stepId)) {
-    if (stepId === "rewards") {
+    if (stepId === "rewards" || stepId === "rewards_additional") {
       const monthDays = getDaysInSettlementMonth();
       if (monthDays != null) {
         const monthName =
           MONTH_LABELS[getSettlementMonth()] || "вибраному місяці";
-        if (poolExceeds(ADDITIONAL_POOL_IDS, monthDays)) {
+        if (
+          stepId === "rewards_additional" &&
+          poolExceeds(ADDITIONAL_POOL_IDS, monthDays)
+        ) {
           return [
             "Загальна кількість днів додаткових винагород не може перевищувати кількість календарних днів у " +
               monthName +
@@ -2463,7 +2725,7 @@ function validateCurrentStep(stepId) {
               "). Якщо за один день ви мали право на кілька винагород, врахуйте його лише для винагороди більшого розміру.",
           ];
         }
-        if (poolExceeds(ONETIME_POOL_IDS, monthDays)) {
+        if (stepId === "rewards" && poolExceeds(ONETIME_POOL_IDS, monthDays)) {
           return [
             "Загальна кількість днів одноразових винагород не може перевищувати кількість календарних днів у " +
               monthName +
@@ -2472,7 +2734,7 @@ function validateCurrentStep(stepId) {
               "). Якщо за один день ви мали право на обидві винагороди, врахуйте його лише для винагороди більшого розміру.",
           ];
         }
-        if (poolExceeds(ASSAULT_POOL_IDS, monthDays)) {
+        if (stepId === "rewards" && poolExceeds(ASSAULT_POOL_IDS, monthDays)) {
           return [
             "Загальна кількість днів штурмових винагород не може перевищувати кількість календарних днів у " +
               monthName +
@@ -2533,6 +2795,7 @@ function renderWizardStep() {
 
   syncAllRewardGroupDetails();
   updateDaysBadges();
+  updateRewardAmounts();
   updateCombatShares();
   clearWizardError();
   updateContinueButton();
@@ -2581,26 +2844,36 @@ function collectAnswersSummary() {
   }
 
   const nopsMode = getSelectedValue("nopsMode");
-  if (nopsMode) {
+  if (nopsMode === "other") {
     items.push({
       label: "Розмір надбавки за особливості проходження служби (НОПС)",
-      value: NOPS_MODE_LABELS[nopsMode] || nopsMode,
+      value: NOPS_MODE_LABELS.other,
+    });
+  } else if (nopsMode) {
+    items.push({
+      label: "Розмір надбавки за особливості проходження служби (НОПС)",
+      value:
+        NOPS_MODE_LABELS.default + " (" + formatNopsPct(getDefaultNopsPct()) + ")",
     });
   }
 
   const nopsCategory = getSelectedValue("nopsCategory");
   if (nopsCategory) {
     const category = getNopsCategory(nopsCategory);
+    const displayPct = nopsCategoryDisplayPct(category);
     items.push({
-      label: "Напрям служби",
-      value: category ? category.label : nopsCategory,
+      label: "Напрям служби (для визначення розміру надбавки)",
+      value:
+        (category ? category.label : nopsCategory) +
+        (displayPct != null ? " (" + formatNopsPct(displayPct) + ")" : ""),
     });
   }
 
   const nopsSpec = getSelectedNopsSpec();
-  if (nopsSpec) {
+  const nopsCategoryObj = nopsCategory ? getNopsCategory(nopsCategory) : null;
+  if (nopsSpec && !nopsCategorySkipsSpecialization(nopsCategoryObj)) {
     items.push({
-      label: "Спеціалізація НОПС",
+      label: "Спеціалізація (для визначення розміру надбавки)",
       value: nopsSpec.label + " (" + formatNopsPct(nopsSpec.nopsPct) + ")",
     });
   }
@@ -2789,8 +3062,25 @@ function collectAnswersSummary() {
   if (hasViolations) {
     items.push({
       label:
-        "У розрахунковому місяці чи були у вас порушення військової дисципліни або незадовільне виконання службових обов’язків?",
+        "Чи були у вас порушення військової дисципліни або незадовільне виконання службових обов’язків у розрахунковому місяці?",
       value: HAS_VIOLATIONS_LABELS[hasViolations] || hasViolations,
+    });
+  }
+  if (hasViolations === "yes") {
+    const violationType = getSelectedValue("violationType");
+    if (violationType) {
+      items.push({
+        label: "Тип порушення",
+        value: VIOLATION_TYPE_LABELS[violationType] || violationType,
+      });
+    }
+    VIOLATION_DETAIL_FIELDS.forEach(function (item) {
+      const value = getSelectedValue(item.name);
+      if (!value) return;
+      items.push({
+        label: "Порушення",
+        value: item.labels[value] || value,
+      });
     });
   }
 
@@ -2798,9 +3088,9 @@ function collectAnswersSummary() {
 }
 
 function resolveNopsPct() {
-  if (getSelectedValue("nopsMode") !== "other") return 65;
+  if (getSelectedValue("nopsMode") !== "other") return getDefaultNopsPct();
   const spec = getSelectedNopsSpec();
-  return spec ? spec.nopsPct : 65;
+  return spec ? spec.nopsPct : getDefaultNopsPct();
 }
 
 function resolvePremiumOverride() {
@@ -2910,6 +3200,7 @@ function buildCalcInput() {
         })()
       : 1,
     hasViolations: getYesNoValue("hasViolations") === "yes",
+    disciplinaryViolation: getSelectedValue("disciplinaryViolation") || "",
     ssoAllowancePct: resolveSsoAllowancePct(),
   };
 }
@@ -2949,6 +3240,38 @@ function appendResultCell(row, text, className) {
   return cell;
 }
 
+const WIZARD_INFO_ICON_SVG =
+  '<svg width="20" height="20" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="8" cy="8" r="7.25" stroke="currentColor" stroke-width="1.5"/><circle cx="8" cy="5.25" r="0.9" fill="currentColor"/><path d="M8 7.25V11.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
+
+function createWizardInfoBox(title, text) {
+  const box = document.createElement("div");
+  box.className = "wizard-info-box wizard-info-box--with-icon";
+  box.setAttribute("role", "note");
+
+  const icon = document.createElement("span");
+  icon.className = "wizard-info-box__icon";
+  icon.setAttribute("aria-hidden", "true");
+  icon.innerHTML = WIZARD_INFO_ICON_SVG;
+
+  const body = document.createElement("div");
+  body.className = "wizard-info-box__body";
+
+  if (title) {
+    const titleEl = document.createElement("p");
+    titleEl.className = "wizard-info-box__title";
+    titleEl.textContent = title;
+    body.appendChild(titleEl);
+  }
+
+  const textEl = document.createElement("p");
+  textEl.className = "wizard-info-box__text";
+  textEl.textContent = text;
+  body.appendChild(textEl);
+
+  box.append(icon, body);
+  return box;
+}
+
 function renderExplanation(result) {
   if (!wizardResultsExplanation) return;
 
@@ -2968,7 +3291,7 @@ function renderExplanation(result) {
       row.classList.add("results-table__row--negative");
     }
     if (line.error && line.nonBlocking) {
-      row.classList.add("results-table__row--note");
+      row.classList.add("results-table__row--info");
     }
     if (line.error && !line.nonBlocking) {
       row.classList.add("results-table__row--error");
@@ -2977,23 +3300,39 @@ function renderExplanation(result) {
     if (line.error && line.value == null) {
       const cell = document.createElement("td");
       cell.colSpan = 4;
-      cell.className = line.nonBlocking
-        ? "results-table__note"
-        : "results-table__error";
-      cell.textContent = line.error;
+      if (line.nonBlocking) {
+        cell.className = "results-table__info";
+        cell.appendChild(createWizardInfoBox("", line.error));
+      } else {
+        cell.className = "results-table__error";
+        cell.textContent = line.error;
+      }
       row.appendChild(cell);
       wizardResultsExplanation.appendChild(row);
       return;
     }
 
-    appendResultCell(row, line.name, "results-table__name");
+    const nameCell = appendResultCell(row, line.name, "results-table__name");
+    if (line.abbr) {
+      const abbrNote = document.createElement("span");
+      abbrNote.className = "results-table__name-abbr";
+      abbrNote.textContent = " (" + line.abbr + ")";
+      nameCell.appendChild(abbrNote);
+    }
     appendResultCell(
       row,
       line.value == null ? "" : formatMoney(line.value),
       "results-table__value"
     );
     appendResultCell(row, line.abbr || "", "results-table__abbr");
-    appendResultCell(row, line.calc || "", "results-table__calc");
+    const calcCell = appendResultCell(row, line.calc || "", "results-table__calc");
+    if (line.calcSuffix) {
+      calcCell.appendChild(document.createTextNode(" "));
+      const suffix = document.createElement("span");
+      suffix.className = "results-table__calc-cut";
+      suffix.textContent = line.calcSuffix;
+      calcCell.appendChild(suffix);
+    }
 
     wizardResultsExplanation.appendChild(row);
   });
@@ -3108,6 +3447,7 @@ function onWizardInputChange() {
   syncAllRewardGroupDetails();
   syncCombatResultsFields();
   updateDaysBadges();
+  updateRewardAmounts();
   updateCombatShares();
   clearWizardError();
   updateContinueButton();
@@ -3128,8 +3468,7 @@ function clearChecked(name) {
 function resetWizard() {
   clearChecked("rank");
   clearChecked("years");
-  const nopsDefault = document.querySelector('input[name="nopsMode"][value="default"]');
-  if (nopsDefault) nopsDefault.checked = true;
+  clearChecked("nopsMode");
   clearChecked("servicePlace");
   clearChecked("ssoPosition");
   clearChecked("hasSecrecy");
@@ -3151,6 +3490,11 @@ function resetWizard() {
   clearChecked("hasAcademicTitle");
   clearChecked("academicTitle");
   clearChecked("hasViolations");
+  clearChecked("violationType");
+  clearChecked("disciplinaryViolation");
+  clearChecked("serviceViolation");
+  clearChecked("legalViolation");
+  clearChecked("qualificationViolation");
   clearChecked("hasEnemiesDestruction");
   clearChecked("hasPrisoners");
 
@@ -3190,6 +3534,7 @@ function resetWizard() {
   syncAllRewardGroupDetails();
   syncCombatResultsFields();
   updateDaysBadges();
+  updateRewardAmounts();
   updateCombatShares();
   currentStepIndex = 0;
   showWizardFromResults();
@@ -3206,9 +3551,13 @@ function bindDaysSteppers() {
 
     function applyDelta(delta) {
       const monthDays = getDaysInSettlementMonth();
-      const max = monthDays == null ? 31 : monthDays;
       const parsed = parseDaysValue(rewardId);
       let base = parsed.ok ? parsed.n : min;
+      const used = sumPoolDays(getRewardPoolIds(rewardId));
+      const others =
+        used != null && parsed.ok ? used - base : used != null ? used : 0;
+      const max =
+        monthDays == null ? 31 : Math.max(min, monthDays - Math.max(0, others));
       let next = base + delta;
       if (next < min) next = min;
       if (next > max) next = max;
@@ -3295,12 +3644,17 @@ function init() {
     "hasAcademicTitle",
     "academicTitle",
     "hasViolations",
+    "violationType",
+    "disciplinaryViolation",
+    "serviceViolation",
+    "legalViolation",
+    "qualificationViolation",
     "hasEnemiesDestruction",
     "hasPrisoners",
-    "rewardGroup_combat",
-    "rewardGroup_training",
     "rewardGroup_onetime",
     "rewardGroup_assault",
+    "rewardGroup_combat",
+    "rewardGroup_training",
   ].forEach(function (name) {
     document.querySelectorAll('input[name="' + name + '"]').forEach(function (input) {
       input.addEventListener("change", onWizardInputChange);
@@ -3359,6 +3713,7 @@ function init() {
   syncAllRewardGroupDetails();
   syncCombatResultsFields();
   updateDaysBadges();
+  updateRewardAmounts();
   updateCombatShares();
   validateTariff();
   renderWizardStep();

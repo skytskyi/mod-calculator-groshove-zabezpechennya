@@ -115,6 +115,14 @@ export const YEARS_PCT = Object.freeze({
   y6: 50,
 });
 
+/** Share of monthly bonus withheld for a disciplinary reprimand. Other violations: 100%. */
+export const PREMIUM_DEPRIVATION_PCT = Object.freeze({
+  reprimand: 10,
+  severe_reprimand: 20,
+  two_reprimands: 40,
+  three_reprimands: 50,
+});
+
 export const SECRECY_PCT = Object.freeze({
   none: { normal: 0, rso: 0 },
   secret: { normal: 10, rso: 30 },
@@ -369,6 +377,15 @@ function resolvePremiumPct(input) {
   return round2((row[idx] || 0) * factor);
 }
 
+function resolvePremiumDeprivationPct(input) {
+  if (!input.hasViolations) return 0;
+  const key = input.disciplinaryViolation;
+  if (key && PREMIUM_DEPRIVATION_PCT[key] != null) {
+    return PREMIUM_DEPRIVATION_PCT[key];
+  }
+  return 100;
+}
+
 function resolveClassPct(input) {
   if (input.classQualification === "medical") {
     const matrix = MEDICAL_CLASS_PCT[input.medicalQualCategory];
@@ -404,7 +421,11 @@ export function calculate(input) {
   const nops = round2(((po + ovz + nvr) * nopsPct) / 100);
 
   const premiumPct = resolvePremiumPct(input);
-  const monthlyBonus = round2((po * premiumPct) / 100);
+  const monthlyBonusFull = round2((po * premiumPct) / 100);
+  const premiumDeprivationPct = resolvePremiumDeprivationPct(input);
+  const monthlyBonus = round2(
+    (monthlyBonusFull * (100 - premiumDeprivationPct)) / 100
+  );
 
   const livingWage = Number(input.livingWage) || LIVING_WAGE_DEFAULT;
   const ssoPct = Number(input.ssoAllowancePct) || 0;
@@ -567,6 +588,8 @@ export function calculate(input) {
     nopsPct,
     nops,
     premiumPct,
+    monthlyBonusFull,
+    premiumDeprivationPct,
     monthlyBonus,
     livingWage,
     ssoPct,
@@ -693,12 +716,23 @@ export function buildResultLines(result) {
       calc: `(${P(result.po)} ПО + ${P(result.ovz)} ОВЗ + ${P(result.nvr)} НВР) × ${result.nopsPct}%`,
     });
   }
-  if (result.monthlyBonus > 0) {
+  if (result.monthlyBonus > 0 || result.premiumDeprivationPct > 0) {
     lines.push({
       name: "Щомісячна премія",
       value: result.monthlyBonus,
       abbr: "ЩП",
       calc: `${P(result.po)} ПО × ${result.premiumPct}%`,
+      calcSuffix: result.premiumDeprivationPct
+        ? `− ${result.premiumDeprivationPct}% позбавлення`
+        : "",
+    });
+  }
+  if (result.hasViolations) {
+    lines.push({
+      name: "Щомісячна премія",
+      value: null,
+      error: "У разі наявності порушень фактична сума може бути менша",
+      nonBlocking: true,
     });
   }
   if (result.sso > 0) {
@@ -917,17 +951,6 @@ export function buildResultLines(result) {
         : "",
     rowType: "subtotal",
   });
-
-  if (result.hasViolations) {
-    lines.push({
-      name: "Порушення військової дисципліни",
-      value: null,
-      error:
-        "Окремі порушення можуть впливати на виплату щомісячної премії та додаткових винагород лише у разі їх письмового оформлення відповідним наказом (розпорядженням) командира (начальника). У таких випадках фактична сума виплат може бути меншою за розраховану калькулятором.",
-      calc: "",
-      nonBlocking: true,
-    });
-  }
 
   if (result.militaryTaxNet > 0) {
     lines.push({

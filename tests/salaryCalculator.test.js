@@ -87,7 +87,7 @@ describe("calculate — screenshot monthly GZ", () => {
       prisonersParticipants: 1,
       enemiesCount: 1,
       enemiesParticipants: 1,
-      hasViolations: true,
+      hasViolations: false,
     });
 
     // shared = 2+2+1+2+3+2+2+3 = 17; tilova = 30-17-2-2-2 = 7
@@ -197,5 +197,83 @@ describe("medical class and SSO allowance", () => {
     });
     expect(result.livingWage).toBe(3328);
     expect(result.sso).toBe(16640);
+  });
+});
+
+describe("premium deprivation for violations", () => {
+  const baseInput = {
+    ovz: 740,
+    tariff: 6,
+    yearsKey: "y5",
+    servicePlace: "general",
+    nopsPct: 65,
+    month: 4,
+    year: 2026,
+    rewardDays: {},
+  };
+
+  it("keeps full monthly bonus without violations", () => {
+    const result = calculate({ ...baseInput, hasViolations: false });
+    expect(result.premiumDeprivationPct).toBe(0);
+    expect(result.monthlyBonus).toBe(result.monthlyBonusFull);
+    expect(result.monthlyBonus).toBe(14928.3);
+  });
+
+  it("withholds 10% for a reprimand", () => {
+    const result = calculate({
+      ...baseInput,
+      hasViolations: true,
+      disciplinaryViolation: "reprimand",
+    });
+    expect(result.premiumDeprivationPct).toBe(10);
+    expect(result.monthlyBonus).toBe(round2(14928.3 * 0.9));
+  });
+
+  it("withholds 20% for a severe reprimand", () => {
+    const result = calculate({
+      ...baseInput,
+      hasViolations: true,
+      disciplinaryViolation: "severe_reprimand",
+    });
+    expect(result.premiumDeprivationPct).toBe(20);
+    expect(result.monthlyBonus).toBe(round2(14928.3 * 0.8));
+  });
+
+  it("withholds 40% for two reprimands", () => {
+    const result = calculate({
+      ...baseInput,
+      hasViolations: true,
+      disciplinaryViolation: "two_reprimands",
+    });
+    expect(result.premiumDeprivationPct).toBe(40);
+    expect(result.monthlyBonus).toBe(round2(14928.3 * 0.6));
+  });
+
+  it("withholds 50% for three reprimands", () => {
+    const result = calculate({
+      ...baseInput,
+      hasViolations: true,
+      disciplinaryViolation: "three_reprimands",
+    });
+    expect(result.premiumDeprivationPct).toBe(50);
+    expect(result.monthlyBonus).toBe(round2(14928.3 * 0.5));
+  });
+
+  it("zeros monthly bonus for any other violation", () => {
+    const moreThanThree = calculate({
+      ...baseInput,
+      hasViolations: true,
+      disciplinaryViolation: "more_than_three",
+    });
+    expect(moreThanThree.premiumDeprivationPct).toBe(100);
+    expect(moreThanThree.monthlyBonus).toBe(0);
+
+    const other = calculate({
+      ...baseInput,
+      hasViolations: true,
+      disciplinaryViolation: "",
+    });
+    expect(other.premiumDeprivationPct).toBe(100);
+    expect(other.monthlyBonus).toBe(0);
   });
 });
