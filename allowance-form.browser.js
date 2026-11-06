@@ -1907,6 +1907,39 @@ function formatNopsRadioTerm(value) {
   return "НОПС: " + formatNopsPct(value);
 }
 
+/**
+ * Premium % for a NOPS specialization, respecting current service place overrides.
+ * @param {{ premiumPct?: number, premiumPctSso?: number, premiumPctDshv?: number } | null | undefined} spec
+ * @returns {number | null}
+ */
+function resolveSpecPremiumPct(spec) {
+  if (!spec) return null;
+  const place = getSelectedValue("servicePlace");
+  if (place === "sso" && spec.premiumPctSso != null) return spec.premiumPctSso;
+  if (
+    (place === "dshv_vms" || place === "a0952") &&
+    spec.premiumPctDshv != null
+  ) {
+    return spec.premiumPctDshv;
+  }
+  if (spec.premiumPct != null) return spec.premiumPct;
+  return null;
+}
+
+/**
+ * Radio subtitle: NOPS % and, when it differs between options, monthly premium %.
+ * @param {{ nopsPct: number, premiumPct?: number, premiumPctSso?: number, premiumPctDshv?: number }} spec
+ * @returns {string}
+ */
+function formatNopsSpecRadioTerm(spec) {
+  let text = formatNopsRadioTerm(spec.nopsPct);
+  const premium = resolveSpecPremiumPct(spec);
+  if (premium != null) {
+    text += " · премія " + formatNopsPct(premium);
+  }
+  return text;
+}
+
 function syncNopsDefaultPct() {
   const el = document.getElementById("nops-default-pct");
   if (!el) return;
@@ -2016,7 +2049,10 @@ function fillNopsCategoryRadios() {
     if (displayPct != null) {
       const percent = document.createElement("span");
       percent.className = "radio-card__term";
-      percent.textContent = formatNopsRadioTerm(displayPct);
+      const firstSpec = visibleItems[0];
+      percent.textContent = firstSpec
+        ? formatNopsSpecRadioTerm(firstSpec)
+        : formatNopsRadioTerm(displayPct);
       content.appendChild(percent);
     }
     nopsCategoryOptions.appendChild(label);
@@ -2078,7 +2114,7 @@ function fillNopsSpecializationRadios(categoryId) {
 
     const percent = document.createElement("span");
     percent.className = "radio-card__term";
-    percent.textContent = formatNopsRadioTerm(spec.nopsPct);
+    percent.textContent = formatNopsSpecRadioTerm(spec);
     content.appendChild(percent);
 
     label.appendChild(input);
@@ -2861,11 +2897,18 @@ function collectAnswersSummary() {
   if (nopsCategory) {
     const category = getNopsCategory(nopsCategory);
     const displayPct = nopsCategoryDisplayPct(category);
+    const skipSpec = nopsCategorySkipsSpecialization(category);
+    const firstSpec =
+      skipSpec && category ? getVisibleNopsSpecs(category)[0] : null;
     items.push({
       label: "Напрям служби (для визначення розміру надбавки)",
       value:
         (category ? category.label : nopsCategory) +
-        (displayPct != null ? " (" + formatNopsPct(displayPct) + ")" : ""),
+        (firstSpec
+          ? " (" + formatNopsSpecRadioTerm(firstSpec) + ")"
+          : displayPct != null
+            ? " (" + formatNopsPct(displayPct) + ")"
+            : ""),
     });
   }
 
@@ -2874,7 +2917,7 @@ function collectAnswersSummary() {
   if (nopsSpec && !nopsCategorySkipsSpecialization(nopsCategoryObj)) {
     items.push({
       label: "Спеціалізація (для визначення розміру надбавки)",
-      value: nopsSpec.label + " (" + formatNopsPct(nopsSpec.nopsPct) + ")",
+      value: nopsSpec.label + " (" + formatNopsSpecRadioTerm(nopsSpec) + ")",
     });
   }
 
@@ -3094,18 +3137,7 @@ function resolveNopsPct() {
 }
 
 function resolvePremiumOverride() {
-  const spec = getSelectedNopsSpec();
-  if (!spec) return null;
-  const place = getSelectedValue("servicePlace");
-  if (place === "sso" && spec.premiumPctSso != null) return spec.premiumPctSso;
-  if (
-    (place === "dshv_vms" || place === "a0952") &&
-    spec.premiumPctDshv != null
-  ) {
-    return spec.premiumPctDshv;
-  }
-  if (spec.premiumPct != null) return spec.premiumPct;
-  return null;
+  return resolveSpecPremiumPct(getSelectedNopsSpec());
 }
 
 function resolveSsoAllowancePct() {
