@@ -675,7 +675,7 @@ function formatNopsSpecRadioTerm(spec) {
       spec.premiumPctDshv !== spec.premiumPct
     ) {
       text +=
-        " (у випадку ДШВ/А0952: " + formatNopsPct(spec.premiumPctDshv) + ")";
+        " (для ДШВ/А0952: " + formatNopsPct(spec.premiumPctDshv) + ")";
     }
   }
   return text;
