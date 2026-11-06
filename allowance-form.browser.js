@@ -1927,15 +1927,25 @@ function resolveSpecPremiumPct(spec) {
 }
 
 /**
- * Radio subtitle: NOPS % and, when it differs between options, monthly premium %.
+ * Radio subtitle: NOPS % and monthly premium % when set.
+ * If ДШВ/А0952 override differs from base premium, append it in parentheses.
  * @param {{ nopsPct: number, premiumPct?: number, premiumPctSso?: number, premiumPctDshv?: number }} spec
  * @returns {string}
  */
 function formatNopsSpecRadioTerm(spec) {
   let text = formatNopsRadioTerm(spec.nopsPct);
-  const premium = resolveSpecPremiumPct(spec);
-  if (premium != null) {
-    text += " · премія " + formatNopsPct(premium);
+  const basePremium =
+    spec.premiumPct != null ? spec.premiumPct : resolveSpecPremiumPct(spec);
+  if (basePremium != null) {
+    text += " · премія " + formatNopsPct(basePremium);
+    if (
+      spec.premiumPctDshv != null &&
+      spec.premiumPct != null &&
+      spec.premiumPctDshv !== spec.premiumPct
+    ) {
+      text +=
+        " (у випадку ДШВ/А0952: " + formatNopsPct(spec.premiumPctDshv) + ")";
+    }
   }
   return text;
 }
