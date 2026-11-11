@@ -2490,9 +2490,18 @@ function syncRewardDaysField(rewardId) {
   if (!field) return;
   const show = getRewardChoice(rewardId) === "yes";
   field.hidden = !show;
+  const input = getDaysInput(rewardId);
+  const stepper = field.querySelector(".days-stepper");
   if (!show) {
-    const input = getDaysInput(rewardId);
     if (input) input.value = "0";
+    if (stepper) stepper.dataset.min = "0";
+  } else {
+    // «Так» без днів не має сенсу — стартуємо з мінімуму 1.
+    if (input) {
+      const parsed = parseDaysValue(rewardId);
+      if (!parsed.ok || parsed.n < 1) input.value = "1";
+    }
+    if (stepper) stepper.dataset.min = "1";
   }
   const card = field.parentElement;
   if (card && card.classList.contains("switch-group-card")) {
@@ -2625,7 +2634,7 @@ function areRewardItemsFilled(rewardIds) {
     if (!choice) return false;
     if (choice === "yes") {
       const parsed = parseDaysValue(id);
-      if (!parsed.ok || parsed.n > monthDays) return false;
+      if (!parsed.ok || parsed.n < 1 || parsed.n > monthDays) return false;
     }
   }
   return true;
@@ -3585,13 +3594,13 @@ function resetWizard() {
 function bindDaysSteppers() {
   document.querySelectorAll(".days-stepper").forEach(function (stepper) {
     const rewardId = stepper.dataset.daysId;
-    const min = Number(stepper.dataset.min || 0);
     const input = getDaysInput(rewardId);
     const dec = stepper.querySelector(".days-dec");
     const inc = stepper.querySelector(".days-inc");
     if (!input || !dec || !inc) return;
 
     function applyDelta(delta) {
+      const min = Number(stepper.dataset.min || 0);
       const monthDays = getDaysInSettlementMonth();
       const parsed = parseDaysValue(rewardId);
       let base = parsed.ok ? parsed.n : min;
