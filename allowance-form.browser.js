@@ -2656,6 +2656,7 @@ function computeLimitPoolRawAmount() {
   Object.keys(REWARD_DEFS).forEach(function (id) {
     const def = REWARD_DEFS[id];
     if (!def || !def.limit) return;
+    if (getRewardChoice(id) !== "yes") return;
 
     const parsed = parseDaysValue(id);
     if (!parsed.ok || parsed.n <= 0) return;
@@ -2699,26 +2700,44 @@ function syncLimitCapNotices(forceMessage) {
     (isLimitCapExceeded() ? buildLimitCapNoticeMessage() : null);
   const stepId = getCurrentStepId();
   const boxes = {
-    rewards: document.getElementById("limit-cap-notice-rewards"),
+    onetime: document.getElementById("limit-cap-notice-onetime"),
+    assault: document.getElementById("limit-cap-notice-assault"),
     additional: document.getElementById("limit-cap-notice-additional"),
     results: document.getElementById("limit-cap-notice-results"),
   };
 
-  renderLimitCapNoticeBox(boxes.rewards, null);
-  renderLimitCapNoticeBox(boxes.additional, null);
-  renderLimitCapNoticeBox(boxes.results, null);
+  Object.keys(boxes).forEach(function (key) {
+    renderLimitCapNoticeBox(boxes[key], null);
+  });
 
   if (!message) return;
 
   if (wizardResults && !wizardResults.hidden) {
     renderLimitCapNoticeBox(boxes.results, message);
+    if (boxes.results && typeof boxes.results.scrollIntoView === "function") {
+      boxes.results.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    }
     return;
   }
 
+  let shown = null;
   if (stepId === "rewards") {
-    renderLimitCapNoticeBox(boxes.rewards, message);
+    // Show under every open group on this step so it sits next to the amounts.
+    if (getRewardGroupChoice("onetime") === "yes") {
+      renderLimitCapNoticeBox(boxes.onetime, message);
+      shown = boxes.onetime;
+    }
+    if (getRewardGroupChoice("assault") === "yes") {
+      renderLimitCapNoticeBox(boxes.assault, message);
+      shown = boxes.assault || shown;
+    }
   } else if (stepId === "rewards_additional") {
     renderLimitCapNoticeBox(boxes.additional, message);
+    shown = boxes.additional;
+  }
+
+  if (shown && typeof shown.scrollIntoView === "function") {
+    shown.scrollIntoView({ block: "nearest", behavior: "smooth" });
   }
 }
 
