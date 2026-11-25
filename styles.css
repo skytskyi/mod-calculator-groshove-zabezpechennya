@@ -1735,8 +1735,12 @@ body.mod-nav-open {
   padding: 14px 16px;
   border: 2px solid var(--error);
   border-radius: var(--radius-card);
-  background: transparent;
+  background: var(--white);
   color: var(--error);
+}
+
+.wizard-step .switch-group-card > .wizard-days-limit-error {
+  margin: 0 18px 16px;
 }
 
 .wizard-days-limit-error[hidden] {
