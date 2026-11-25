@@ -916,25 +916,21 @@ body.mod-nav-open {
   display: none;
 }
 
+/* Stepper (Figma MO v2): one bar, circular controls inside */
 .tariff-stepper {
-  display: flex;
-  align-items: stretch;
-  gap: 8px;
-  width: 100%;
-  max-width: var(--radio-card-width);
-}
-
-/* Plus/minus stepper (Figma MO v2): one bar, circular buttons inside */
-.tariff-stepper:not(.period-stepper) {
   position: relative;
   display: block;
+  width: 100%;
+  max-width: var(--radio-card-width);
   height: 64px;
-  gap: 0;
   background: var(--white);
   border-radius: 2px;
 }
 
 .stepper__btn {
+  position: absolute;
+  top: 8px;
+  z-index: 2;
   width: 48px;
   height: 48px;
   flex-shrink: 0;
@@ -953,17 +949,11 @@ body.mod-nav-open {
   cursor: pointer;
 }
 
-.tariff-stepper:not(.period-stepper) > .stepper__btn {
-  position: absolute;
-  top: 8px;
-  z-index: 2;
-}
-
-.tariff-stepper:not(.period-stepper) > .stepper__btn:first-child {
+.tariff-stepper > .stepper__btn:first-child {
   left: 8px;
 }
 
-.tariff-stepper:not(.period-stepper) > .stepper__btn:last-child {
+.tariff-stepper > .stepper__btn:last-child {
   right: 8px;
 }
 
@@ -976,6 +966,15 @@ body.mod-nav-open {
   border-color: #141414;
 }
 
+.stepper__btn:focus {
+  outline: none;
+}
+
+.stepper__btn:focus-visible {
+  outline: 2px solid var(--orange);
+  outline-offset: 2px;
+}
+
 .stepper__btn:disabled {
   border-color: #d1d1d1;
   color: #888888;
@@ -984,47 +983,18 @@ body.mod-nav-open {
   filter: none;
 }
 
-.period-stepper {
-  display: flex;
-  align-items: stretch;
-  gap: 8px;
-  height: auto;
-  background: transparent;
-  border-radius: 0;
-}
-
-.period-stepper__btn,
-.period-stepper .stepper__btn {
-  position: static;
-  width: 64px;
-  height: 64px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--orange);
-  background: var(--orange);
-  color: #000;
-}
-
-.period-stepper__btn:hover:not(:disabled),
-.period-stepper .stepper__btn:hover:not(:disabled) {
-  filter: brightness(1.05);
-  border-color: var(--orange);
-  color: #000;
-}
-
-.period-stepper__btn:disabled,
-.period-stepper .stepper__btn:disabled {
-  opacity: 0.4;
-  border-color: var(--orange);
-  color: #000;
-}
-
 .period-stepper__icon {
   display: block;
   width: 24px;
   height: 24px;
   filter: brightness(0);
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+.period-stepper__btn:disabled .period-stepper__icon,
+.stepper__btn:disabled .period-stepper__icon {
+  opacity: 0.35;
 }
 
 .period-stepper__icon--next {
@@ -1032,22 +1002,22 @@ body.mod-nav-open {
 }
 
 .period-stepper__value {
-  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 100%;
   min-width: 0;
   height: 64px;
   margin: 0;
-  padding: 0 20px;
-  border: 2px solid #fff;
+  padding: 0 64px;
+  border: 0;
   border-radius: 2px;
-  background: #fff;
+  background: transparent;
   box-sizing: border-box;
   font-family: inherit;
   font-size: 20px;
   line-height: 24px;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--text-strong);
   text-align: center;
 }
@@ -1059,7 +1029,7 @@ body.mod-nav-open {
   height: 64px;
 }
 
-.tariff-stepper:not(.period-stepper) .tariff-stepper__input-shell {
+.tariff-stepper .tariff-stepper__input-shell {
   width: 100%;
 }
 
@@ -1085,7 +1055,7 @@ body.mod-nav-open {
   outline-offset: -2px;
 }
 
-.field--tariff.is-invalid .tariff-stepper:not(.period-stepper) {
+.field--tariff.is-invalid .tariff-stepper {
   outline: 2px solid var(--error);
   outline-offset: -2px;
 }
