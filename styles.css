@@ -927,8 +927,11 @@ body.mod-nav-open {
   border-radius: 2px;
 }
 
-/* Days inputs are short (≤2 digits) — half of the standard stepper width */
-.tariff-stepper.days-stepper {
+/* Short numeric steppers (tariff, days, counts) — half of the standard width.
+   Period stepper stays full width for month+year labels. */
+.tariff-stepper.days-stepper,
+.field--tariff .tariff-stepper,
+.tariff-stepper[data-number-input] {
   max-width: calc(var(--radio-card-width) / 2);
 }
 
@@ -1717,7 +1720,9 @@ body.mod-nav-open {
   max-width: 100%;
 }
 
-.wizard-step .tariff-stepper.days-stepper {
+.wizard-step .tariff-stepper.days-stepper,
+.wizard-step .field--tariff .tariff-stepper,
+.wizard-step .tariff-stepper[data-number-input] {
   max-width: 50%;
 }
 
@@ -1728,7 +1733,9 @@ body.mod-nav-open {
     max-width: 50%;
   }
 
-  .wizard-step .tariff-stepper.days-stepper {
+  .wizard-step .tariff-stepper.days-stepper,
+  .wizard-step .field--tariff .tariff-stepper,
+  .wizard-step .tariff-stepper[data-number-input] {
     max-width: 25%;
   }
 }
@@ -2482,7 +2489,9 @@ body.mod-nav-open {
     max-width: 100%;
   }
 
-  .tariff-stepper.days-stepper {
+  .tariff-stepper.days-stepper,
+  .field--tariff .tariff-stepper,
+  .tariff-stepper[data-number-input] {
     max-width: 50%;
   }
 }
