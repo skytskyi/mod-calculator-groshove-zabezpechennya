@@ -1731,12 +1731,12 @@ body.mod-nav-open {
 }
 
 .wizard-days-limit-error {
-  margin: 0 0 16px;
+  margin: 16px 0 0;
   padding: 14px 16px;
   border: 2px solid var(--error);
   border-radius: var(--radius-card);
-  background: #fff8f8;
-  color: var(--text-strong);
+  background: transparent;
+  color: var(--error);
 }
 
 .wizard-days-limit-error[hidden] {
@@ -1755,6 +1755,7 @@ body.mod-nav-open {
   margin: 0;
   font-size: 14px;
   line-height: 1.45;
+  color: var(--error);
 }
 
 .wizard__main {

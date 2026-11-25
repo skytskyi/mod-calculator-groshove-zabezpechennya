@@ -2923,8 +2923,6 @@ function renderWizardStep() {
   updateCombatShares();
   clearWizardError();
   syncDaysLimitErrorBoxes();
-  const daysLimitError = getRewardsDaysLimitError(stepId);
-  if (daysLimitError) showWizardError(daysLimitError);
   updateContinueButton();
 }
 
@@ -3496,7 +3494,14 @@ function goToNextStep() {
   const errors = validateCurrentStep(stepId);
 
   if (errors.length) {
-    showWizardError(errors[0]);
+    const first = errors[0];
+    // Days-limit copy lives in the open reward block — don't duplicate in #wizard-error.
+    if (first && typeof first === "object" && first.title) {
+      clearWizardError();
+      syncDaysLimitErrorBoxes();
+      return;
+    }
+    showWizardError(first);
     return;
   }
 
@@ -3574,8 +3579,6 @@ function onWizardInputChange() {
   updateCombatShares();
   clearWizardError();
   syncDaysLimitErrorBoxes();
-  const daysLimitError = getRewardsDaysLimitError(getCurrentStepId());
-  if (daysLimitError) showWizardError(daysLimitError);
   updateContinueButton();
 }
 
