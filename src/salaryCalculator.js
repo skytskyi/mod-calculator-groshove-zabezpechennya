@@ -916,16 +916,15 @@ export function buildResultLines(result) {
     });
 
     if (result.limitApplied) {
-      const capLabel = P(LIMIT_CAP).replace(/,00$/, "");
       const excess = round2(result.limitRaw - LIMIT_CAP);
       lines.push({
-        name: `Зменшення до ліміту бойових виплат (${capLabel} грн)`,
-        value: round2(-excess),
-        abbr: "",
-        calc: `${P(result.limitRaw)} → ${capLabel} (−${P(excess).replace(
+        name: `Зменшення до ліміту бойових виплат (${P(LIMIT_CAP).replace(
           /,00$/,
           ""
         )} грн)`,
+        value: round2(-excess),
+        abbr: "",
+        calc: `${P(result.limitRaw)} - ${P(excess)} = ${P(LIMIT_CAP)}`,
         limitItem: true,
         negative: true,
       });
