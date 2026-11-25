@@ -2577,9 +2577,15 @@ function setDaysBadge(el, used, monthDays) {
     el.classList.remove("is-over");
     return;
   }
+  const over = used > monthDays;
+  el.classList.toggle("is-over", over);
+  if (over) {
+    el.textContent =
+      "Перевищено ліміт днів (" + used + " з " + monthDays + ")";
+    return;
+  }
   const left = Math.max(0, monthDays - used);
   el.textContent = "Можна вказати ще " + left + " " + daysWord(left);
-  el.classList.toggle("is-over", used > monthDays);
 }
 
 function setDaysBadges(pool, used, monthDays) {
@@ -2761,45 +2767,95 @@ function isStepFilled(stepId) {
   }
 }
 
+function buildDaysLimitExceededMessage(usedDays, monthName) {
+  return {
+    title: "Кількість днів перевищує можливий ліміт",
+    detail:
+      "Загальна кількість діб (" +
+      usedDays +
+      ") не може перевищувати кількість календарних днів у вибраному місяці (" +
+      monthName +
+      "). Якщо за одну добу ви мали право на обидві винагороди, врахуйте її лише для винагороди більшого розміру.",
+  };
+}
+
+function getRewardsDaysLimitError(stepId) {
+  const errors = getRewardsDaysLimitErrors(stepId);
+  return errors.length ? errors[0].message : null;
+}
+
+function getRewardsDaysLimitErrors(stepId) {
+  const monthDays = getDaysInSettlementMonth();
+  if (monthDays == null) return [];
+  const monthName = MONTH_LABELS[getSettlementMonth()];
+  if (!monthName) return [];
+  const errors = [];
+
+  function pushError(pool, used) {
+    if (used == null || used <= monthDays) return;
+    errors.push({
+      pool: pool,
+      message: buildDaysLimitExceededMessage(used, monthName),
+    });
+  }
+
+  if (stepId === "rewards") {
+    pushError("onetime", sumPoolDays(ONETIME_POOL_IDS));
+    pushError("assault", sumPoolDays(ASSAULT_POOL_IDS));
+  }
+
+  if (stepId === "rewards_additional") {
+    pushError("additional", sumPoolDays(ADDITIONAL_POOL_IDS));
+  }
+
+  return errors;
+}
+
+function renderDaysLimitErrorBox(el, message) {
+  if (!el) return;
+  if (!message) {
+    el.hidden = true;
+    el.replaceChildren();
+    return;
+  }
+  el.replaceChildren();
+  const titleEl = document.createElement("p");
+  titleEl.className = "wizard-days-limit-error__title";
+  titleEl.textContent = message.title || "";
+  const detailEl = document.createElement("p");
+  detailEl.className = "wizard-days-limit-error__detail";
+  detailEl.textContent = message.detail || "";
+  el.appendChild(titleEl);
+  el.appendChild(detailEl);
+  el.hidden = false;
+}
+
+function syncDaysLimitErrorBoxes() {
+  const boxes = {
+    onetime: document.getElementById("days-limit-error-onetime"),
+    assault: document.getElementById("days-limit-error-assault"),
+    additional: document.getElementById("days-limit-error-additional"),
+  };
+  Object.keys(boxes).forEach(function (pool) {
+    renderDaysLimitErrorBox(boxes[pool], null);
+  });
+
+  const errors = getRewardsDaysLimitErrors(getCurrentStepId());
+  let firstVisible = null;
+  errors.forEach(function (item) {
+    const el = boxes[item.pool];
+    renderDaysLimitErrorBox(el, item.message);
+    if (el && !firstVisible) firstVisible = el;
+  });
+  if (firstVisible && typeof firstVisible.scrollIntoView === "function") {
+    firstVisible.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }
+}
+
 function validateCurrentStep(stepId) {
+  const daysLimitError = getRewardsDaysLimitError(stepId);
+  if (daysLimitError) return [daysLimitError];
   if (!isStepFilled(stepId)) {
-    if (stepId === "rewards" || stepId === "rewards_additional") {
-      const monthDays = getDaysInSettlementMonth();
-      if (monthDays != null) {
-        const monthName =
-          MONTH_LABELS[getSettlementMonth()] || "вибраному місяці";
-        if (
-          stepId === "rewards_additional" &&
-          poolExceeds(ADDITIONAL_POOL_IDS, monthDays)
-        ) {
-          return [
-            "Загальна кількість днів додаткових винагород не може перевищувати кількість календарних днів у " +
-              monthName +
-              " (" +
-              monthDays +
-              "). Якщо за один день ви мали право на кілька винагород, врахуйте його лише для винагороди більшого розміру.",
-          ];
-        }
-        if (stepId === "rewards" && poolExceeds(ONETIME_POOL_IDS, monthDays)) {
-          return [
-            "Загальна кількість днів одноразових винагород не може перевищувати кількість календарних днів у " +
-              monthName +
-              " (" +
-              monthDays +
-              "). Якщо за один день ви мали право на обидві винагороди, врахуйте його лише для винагороди більшого розміру.",
-          ];
-        }
-        if (stepId === "rewards" && poolExceeds(ASSAULT_POOL_IDS, monthDays)) {
-          return [
-            "Загальна кількість днів штурмових винагород не може перевищувати кількість календарних днів у " +
-              monthName +
-              " (" +
-              monthDays +
-              "). Якщо за один день ви мали право на обидві винагороди, врахуйте його лише для винагороди більшого розміру.",
-          ];
-        }
-      }
-    }
     return ["Заповніть усі поля на цьому кроці, щоб продовжити."];
   }
   return [];
@@ -2808,12 +2864,25 @@ function validateCurrentStep(stepId) {
 function clearWizardError() {
   if (!wizardError) return;
   wizardError.hidden = true;
+  wizardError.replaceChildren();
   wizardError.textContent = "";
 }
 
 function showWizardError(message) {
   if (!wizardError) return;
-  wizardError.textContent = message;
+  wizardError.replaceChildren();
+  if (message && typeof message === "object") {
+    const titleEl = document.createElement("strong");
+    titleEl.className = "wizard__error-title";
+    titleEl.textContent = message.title || "";
+    const detailEl = document.createElement("span");
+    detailEl.className = "wizard__error-detail";
+    detailEl.textContent = message.detail || "";
+    wizardError.appendChild(titleEl);
+    wizardError.appendChild(detailEl);
+  } else {
+    wizardError.textContent = message || "";
+  }
   wizardError.hidden = false;
 }
 
@@ -2853,6 +2922,9 @@ function renderWizardStep() {
   updateRewardAmounts();
   updateCombatShares();
   clearWizardError();
+  syncDaysLimitErrorBoxes();
+  const daysLimitError = getRewardsDaysLimitError(stepId);
+  if (daysLimitError) showWizardError(daysLimitError);
   updateContinueButton();
 }
 
@@ -3501,6 +3573,9 @@ function onWizardInputChange() {
   updateRewardAmounts();
   updateCombatShares();
   clearWizardError();
+  syncDaysLimitErrorBoxes();
+  const daysLimitError = getRewardsDaysLimitError(getCurrentStepId());
+  if (daysLimitError) showWizardError(daysLimitError);
   updateContinueButton();
 }
 
