@@ -1735,7 +1735,7 @@ body.mod-nav-open {
   padding: 14px 16px;
   border: 2px solid var(--error);
   border-radius: var(--radius-card);
-  background: var(--white);
+  background: rgba(186, 0, 0, 0.1);
   color: var(--error);
 }
 
