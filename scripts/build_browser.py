@@ -83,6 +83,7 @@ def build_form_browser() -> None:
     calculate,
     formatMoney,
     round2,
+    LIMIT_CAP,
     REWARD_DEFS,
     buildResultLines,
     SSO_ALLOWANCE_PCT,

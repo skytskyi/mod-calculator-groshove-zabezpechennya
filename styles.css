@@ -1730,7 +1730,8 @@ body.mod-nav-open {
   display: none;
 }
 
-.wizard-days-limit-error {
+.wizard-days-limit-error,
+.wizard-limit-cap-notice {
   margin: 16px 0 0;
   padding: 14px 16px;
   border: 2px solid var(--error);
@@ -1739,15 +1740,26 @@ body.mod-nav-open {
   color: var(--error);
 }
 
-.wizard-step .switch-group-card > .wizard-days-limit-error {
+.wizard-step .switch-group-card > .wizard-days-limit-error,
+.wizard-step .switch-group-card > .wizard-limit-cap-notice {
   margin: 0 18px 16px;
 }
 
-.wizard-days-limit-error[hidden] {
+.wizard-step > .wizard-limit-cap-notice {
+  margin: 16px 0 0;
+}
+
+.results-pay .wizard-limit-cap-notice {
+  margin: 16px 0 0;
+}
+
+.wizard-days-limit-error[hidden],
+.wizard-limit-cap-notice[hidden] {
   display: none;
 }
 
-.wizard-days-limit-error__title {
+.wizard-days-limit-error__title,
+.wizard-limit-cap-notice__title {
   margin: 0 0 8px;
   font-size: 15px;
   font-weight: 600;
@@ -1755,7 +1767,8 @@ body.mod-nav-open {
   color: var(--error);
 }
 
-.wizard-days-limit-error__detail {
+.wizard-days-limit-error__detail,
+.wizard-limit-cap-notice__detail {
   margin: 0;
   font-size: 14px;
   line-height: 1.45;

@@ -917,10 +917,13 @@ function buildResultLines(result) {
     });
 
     if (result.limitApplied) {
+      const capLabel = P(LIMIT_CAP).replace(/,00$/, "");
       lines.push({
-        name: `Перевищено ліміт ${P(LIMIT_CAP)} грн`,
+        name: `Максимальна сума бойових виплат — ${capLabel} грн`,
         value: round2(result.limitRaw - LIMIT_CAP),
-        error: `Перевищено на ${P(round2(result.limitRaw - LIMIT_CAP))} грн`,
+        error: `Розрахункова сума перевищує ліміт на ${P(
+          round2(result.limitRaw - LIMIT_CAP)
+        )} грн. Нарахування становитиме не більше ${capLabel} грн, навіть якщо вказати більше днів.`,
         limitItem: true,
       });
     }
@@ -1256,6 +1259,7 @@ function formatNopsPct(value) {
     calculate,
     formatMoney,
     round2,
+    LIMIT_CAP,
     REWARD_DEFS,
     buildResultLines,
     SSO_ALLOWANCE_PCT,
@@ -2625,6 +2629,99 @@ function updateRewardAmounts() {
   });
 }
 
+function formatLimitCapLabel() {
+  return formatMoney(LIMIT_CAP).replace(/,00$/, "");
+}
+
+function buildLimitCapNoticeMessage() {
+  const cap = formatLimitCapLabel();
+  return {
+    title: "Максимальна сума бойових виплат — " + cap + " грн",
+    detail:
+      "За введеними даними розрахункова сума перевищує ліміт. Нарахування становитиме не більше " +
+      cap +
+      " грн, навіть якщо вказати більше днів.",
+  };
+}
+
+function computeLimitPoolRawAmount() {
+  const monthDays = getDaysInSettlementMonth();
+  if (monthDays == null || monthDays <= 0) return 0;
+
+  const onetimeExceed = poolExceeds(ONETIME_POOL_IDS, monthDays);
+  const stormExceed = poolExceeds(ASSAULT_POOL_IDS, monthDays);
+  const additionalExceed = poolExceeds(ADDITIONAL_POOL_IDS, monthDays);
+
+  let total = 0;
+  Object.keys(REWARD_DEFS).forEach(function (id) {
+    const def = REWARD_DEFS[id];
+    if (!def || !def.limit) return;
+
+    const parsed = parseDaysValue(id);
+    if (!parsed.ok || parsed.n <= 0) return;
+
+    if (def.kind === "stronghold" && onetimeExceed) return;
+    if (def.kind === "storm" && stormExceed) return;
+    if (def.kind === "shared" && additionalExceed) return;
+
+    const amount = computeRewardLiveAmount(id, parsed.n, monthDays);
+    if (amount != null) total = round2(total + amount);
+  });
+  return total;
+}
+
+function isLimitCapExceeded() {
+  return computeLimitPoolRawAmount() > LIMIT_CAP;
+}
+
+function renderLimitCapNoticeBox(el, message) {
+  if (!el) return;
+  if (!message) {
+    el.hidden = true;
+    el.replaceChildren();
+    return;
+  }
+  el.replaceChildren();
+  const titleEl = document.createElement("p");
+  titleEl.className = "wizard-limit-cap-notice__title";
+  titleEl.textContent = message.title || "";
+  const detailEl = document.createElement("p");
+  detailEl.className = "wizard-limit-cap-notice__detail";
+  detailEl.textContent = message.detail || "";
+  el.appendChild(titleEl);
+  el.appendChild(detailEl);
+  el.hidden = false;
+}
+
+function syncLimitCapNotices(forceMessage) {
+  const message =
+    forceMessage ||
+    (isLimitCapExceeded() ? buildLimitCapNoticeMessage() : null);
+  const stepId = getCurrentStepId();
+  const boxes = {
+    rewards: document.getElementById("limit-cap-notice-rewards"),
+    additional: document.getElementById("limit-cap-notice-additional"),
+    results: document.getElementById("limit-cap-notice-results"),
+  };
+
+  renderLimitCapNoticeBox(boxes.rewards, null);
+  renderLimitCapNoticeBox(boxes.additional, null);
+  renderLimitCapNoticeBox(boxes.results, null);
+
+  if (!message) return;
+
+  if (wizardResults && !wizardResults.hidden) {
+    renderLimitCapNoticeBox(boxes.results, message);
+    return;
+  }
+
+  if (stepId === "rewards") {
+    renderLimitCapNoticeBox(boxes.rewards, message);
+  } else if (stepId === "rewards_additional") {
+    renderLimitCapNoticeBox(boxes.additional, message);
+  }
+}
+
 function poolExceeds(rewardIds, monthDays) {
   const used = sumPoolDays(rewardIds);
   return used != null && used > monthDays;
@@ -2923,6 +3020,7 @@ function renderWizardStep() {
   updateCombatShares();
   clearWizardError();
   syncDaysLimitErrorBoxes();
+  syncLimitCapNotices();
   updateContinueButton();
 }
 
@@ -3470,6 +3568,9 @@ function showResults(result) {
   renderExplanation(result);
   renderInputSummary();
   showWizardResultsView();
+  syncLimitCapNotices(
+    result && result.limitApplied ? buildLimitCapNoticeMessage() : null
+  );
 }
 
 function showWizardFromResults() {
@@ -3579,6 +3680,7 @@ function onWizardInputChange() {
   updateCombatShares();
   clearWizardError();
   syncDaysLimitErrorBoxes();
+  syncLimitCapNotices();
   updateContinueButton();
 }
 

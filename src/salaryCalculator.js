@@ -916,10 +916,13 @@ export function buildResultLines(result) {
     });
 
     if (result.limitApplied) {
+      const capLabel = P(LIMIT_CAP).replace(/,00$/, "");
       lines.push({
-        name: `Перевищено ліміт ${P(LIMIT_CAP)} грн`,
+        name: `Максимальна сума бойових виплат — ${capLabel} грн`,
         value: round2(result.limitRaw - LIMIT_CAP),
-        error: `Перевищено на ${P(round2(result.limitRaw - LIMIT_CAP))} грн`,
+        error: `Розрахункова сума перевищує ліміт на ${P(
+          round2(result.limitRaw - LIMIT_CAP)
+        )} грн. Нарахування становитиме не більше ${capLabel} грн, навіть якщо вказати більше днів.`,
         limitItem: true,
       });
     }
