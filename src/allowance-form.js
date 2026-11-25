@@ -1430,7 +1430,6 @@ function syncLimitCapNotices(forceMessage) {
     onetime: document.getElementById("limit-cap-notice-onetime"),
     assault: document.getElementById("limit-cap-notice-assault"),
     additional: document.getElementById("limit-cap-notice-additional"),
-    results: document.getElementById("limit-cap-notice-results"),
   };
 
   Object.keys(boxes).forEach(function (key) {
@@ -1438,14 +1437,7 @@ function syncLimitCapNotices(forceMessage) {
   });
 
   if (!message) return;
-
-  if (wizardResults && !wizardResults.hidden) {
-    renderLimitCapNoticeBox(boxes.results, message);
-    if (boxes.results && typeof boxes.results.scrollIntoView === "function") {
-      boxes.results.scrollIntoView({ block: "nearest", behavior: "smooth" });
-    }
-    return;
-  }
+  if (wizardResults && !wizardResults.hidden) return;
 
   let shown = null;
   if (stepId === "rewards") {

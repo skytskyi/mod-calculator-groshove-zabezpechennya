@@ -1749,10 +1749,6 @@ body.mod-nav-open {
   margin: 16px 0 0;
 }
 
-.results-pay .wizard-limit-cap-notice {
-  margin: 16px 0 0;
-}
-
 .wizard-days-limit-error[hidden],
 .wizard-limit-cap-notice[hidden] {
   display: none;
