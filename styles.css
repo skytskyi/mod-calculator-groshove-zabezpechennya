@@ -924,39 +924,99 @@ body.mod-nav-open {
   max-width: var(--radio-card-width);
 }
 
-.stepper__btn {
-  width: 64px;
+/* Plus/minus stepper (Figma MO v2): one bar, circular buttons inside */
+.tariff-stepper:not(.period-stepper) {
+  position: relative;
+  display: block;
   height: 64px;
+  gap: 0;
+  background: var(--white);
+  border-radius: 2px;
+}
+
+.stepper__btn {
+  width: 48px;
+  height: 48px;
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
   border-radius: var(--radius-pill);
-  border: 1px solid var(--orange);
-  background: var(--orange);
+  border: 1px solid #888888;
+  background: transparent;
   font-family: inherit;
   font-weight: 500;
   font-size: 32px;
   line-height: 1.2;
-  color: var(--text-dark);
+  color: #212121;
   cursor: pointer;
 }
 
-.stepper__btn:hover {
-  filter: brightness(1.05);
+.tariff-stepper:not(.period-stepper) > .stepper__btn {
+  position: absolute;
+  top: 8px;
+  z-index: 2;
 }
 
-.stepper__btn:active {
-  filter: brightness(0.97);
+.tariff-stepper:not(.period-stepper) > .stepper__btn:first-child {
+  left: 8px;
+}
+
+.tariff-stepper:not(.period-stepper) > .stepper__btn:last-child {
+  right: 8px;
+}
+
+.stepper__btn:hover:not(:disabled) {
+  border-color: #212121;
+  color: #212121;
+}
+
+.stepper__btn:active:not(:disabled) {
+  border-color: #141414;
 }
 
 .stepper__btn:disabled {
-  opacity: 0.4;
+  border-color: #d1d1d1;
+  color: #888888;
+  opacity: 1;
   cursor: default;
   filter: none;
 }
 
-.period-stepper__btn {
+.period-stepper {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  height: auto;
+  background: transparent;
+  border-radius: 0;
+}
+
+.period-stepper__btn,
+.period-stepper .stepper__btn {
+  position: static;
+  width: 64px;
+  height: 64px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  border: 1px solid var(--orange);
+  background: var(--orange);
+  color: #000;
+}
+
+.period-stepper__btn:hover:not(:disabled),
+.period-stepper .stepper__btn:hover:not(:disabled) {
+  filter: brightness(1.05);
+  border-color: var(--orange);
+  color: #000;
+}
+
+.period-stepper__btn:disabled,
+.period-stepper .stepper__btn:disabled {
+  opacity: 0.4;
+  border-color: var(--orange);
   color: #000;
 }
 
@@ -999,29 +1059,39 @@ body.mod-nav-open {
   height: 64px;
 }
 
+.tariff-stepper:not(.period-stepper) .tariff-stepper__input-shell {
+  width: 100%;
+}
+
 .tariff-input {
   width: 100%;
   height: 100%;
   margin: 0;
-  padding: 0 52px 0 20px;
-  border: 2px solid #fff;
+  padding: 0 64px;
+  border: 0;
   border-radius: 2px;
-  background: #fff;
+  background: transparent;
   font-family: inherit;
   font-size: 20px;
   line-height: 24px;
+  font-weight: 400;
   color: var(--text-strong);
+  text-align: center;
   box-sizing: border-box;
 }
 
 .tariff-input:focus {
   outline: 2px solid var(--orange);
-  outline-offset: 2px;
+  outline-offset: -2px;
+}
+
+.field--tariff.is-invalid .tariff-stepper:not(.period-stepper) {
+  outline: 2px solid var(--error);
+  outline-offset: -2px;
 }
 
 .field--tariff.is-invalid .tariff-input {
-  border-color: var(--error);
-  padding-right: 52px;
+  border-color: transparent;
 }
 
 .field--tariff.is-invalid .tariff-input:focus {
@@ -1030,7 +1100,7 @@ body.mod-nav-open {
 
 .tariff-input__error-icon {
   position: absolute;
-  right: 16px;
+  right: 64px;
   top: 50%;
   transform: translateY(-50%);
   width: 24px;

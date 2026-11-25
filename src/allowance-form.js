@@ -514,10 +514,19 @@ function updateTariffRankWarning() {
   setTariffRankWarning(result.n < range.min || result.n > range.max);
 }
 
+function syncTariffStepperButtons() {
+  if (!tariffDec || !tariffInc) return;
+  const result = parseTariff();
+  const n = result.ok ? result.n : TARIFF_MIN;
+  tariffDec.disabled = n <= TARIFF_MIN;
+  tariffInc.disabled = n >= TARIFF_MAX;
+}
+
 function validateTariff() {
   const result = parseTariff();
   setTariffValidity(result.ok);
   if (result.ok) updateTariffRankWarning();
+  syncTariffStepperButtons();
   return result;
 }
 
@@ -1759,6 +1768,9 @@ function renderWizardStep() {
   clearWizardError();
   syncDaysLimitErrorBoxes();
   syncLimitCapNotices();
+  syncAllDaysStepperButtons();
+  syncAllNumberStepperButtons();
+  syncTariffStepperButtons();
   updateContinueButton();
 }
 
@@ -2418,6 +2430,9 @@ function onWizardInputChange() {
   clearWizardError();
   syncDaysLimitErrorBoxes();
   syncLimitCapNotices();
+  syncAllDaysStepperButtons();
+  syncAllNumberStepperButtons();
+  syncTariffStepperButtons();
   updateContinueButton();
 }
 
@@ -2508,6 +2523,49 @@ function resetWizard() {
   showWizardFromResults();
 }
 
+function syncDaysStepperButtons(stepper) {
+  const rewardId = stepper.dataset.daysId;
+  const input = getDaysInput(rewardId);
+  const dec = stepper.querySelector(".days-dec");
+  const inc = stepper.querySelector(".days-inc");
+  if (!input || !dec || !inc) return;
+  const min = Number(stepper.dataset.min || 0);
+  const monthDays = getDaysInSettlementMonth();
+  const parsed = parseDaysValue(rewardId);
+  const base = parsed.ok ? parsed.n : min;
+  const used = sumPoolDays(getRewardPoolIds(rewardId));
+  const others =
+    used != null && parsed.ok ? used - base : used != null ? used : 0;
+  const max =
+    monthDays == null ? 31 : Math.max(min, monthDays - Math.max(0, others));
+  dec.disabled = base <= min;
+  inc.disabled = base >= max;
+}
+
+function syncAllDaysStepperButtons() {
+  document.querySelectorAll(".days-stepper").forEach(syncDaysStepperButtons);
+}
+
+function syncNumberStepperButtons(stepper) {
+  const inputId = stepper.dataset.numberInput;
+  const min = Number(stepper.dataset.min || 0);
+  const max = Number(stepper.dataset.max || 999);
+  const input = document.getElementById(inputId);
+  const dec = stepper.querySelector(".number-dec");
+  const inc = stepper.querySelector(".number-inc");
+  if (!input || !dec || !inc) return;
+  const parsed = parseNumberInput(inputId, min, max);
+  const n = parsed.ok ? parsed.n : min;
+  dec.disabled = n <= min;
+  inc.disabled = n >= max;
+}
+
+function syncAllNumberStepperButtons() {
+  document
+    .querySelectorAll("[data-number-input]")
+    .forEach(syncNumberStepperButtons);
+}
+
 function bindDaysSteppers() {
   document.querySelectorAll(".days-stepper").forEach(function (stepper) {
     const rewardId = stepper.dataset.daysId;
@@ -2540,6 +2598,7 @@ function bindDaysSteppers() {
       applyDelta(1);
     });
     input.addEventListener("input", onWizardInputChange);
+    syncDaysStepperButtons(stepper);
   });
 }
 
@@ -2570,6 +2629,7 @@ function bindNumberSteppers() {
       applyDelta(1);
     });
     input.addEventListener("input", onWizardInputChange);
+    syncNumberStepperButtons(stepper);
   });
 }
 
