@@ -927,6 +927,11 @@ body.mod-nav-open {
   border-radius: 2px;
 }
 
+/* Days inputs are short (≤2 digits) — half of the standard stepper width */
+.tariff-stepper.days-stepper {
+  max-width: calc(var(--radio-card-width) / 2);
+}
+
 .stepper__btn {
   position: absolute;
   top: 8px;
@@ -1712,11 +1717,19 @@ body.mod-nav-open {
   max-width: 100%;
 }
 
+.wizard-step .tariff-stepper.days-stepper {
+  max-width: 50%;
+}
+
 @media (min-width: 900px) {
   .wizard-step .field__legend.visually-hidden + .date-field,
   .wizard-step .date-field,
   .wizard-step .tariff-stepper {
     max-width: 50%;
+  }
+
+  .wizard-step .tariff-stepper.days-stepper {
+    max-width: 25%;
   }
 }
 
@@ -2467,6 +2480,10 @@ body.mod-nav-open {
   .date-field,
   .tariff-stepper {
     max-width: 100%;
+  }
+
+  .tariff-stepper.days-stepper {
+    max-width: 50%;
   }
 }
 
