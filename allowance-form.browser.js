@@ -3590,9 +3590,8 @@ function showResults(result) {
   renderExplanation(result);
   renderInputSummary();
   showWizardResultsView();
-  syncLimitCapNotices(
-    result && result.limitApplied ? buildLimitCapNoticeMessage() : null
-  );
+  // Cap notice stays on reward steps only; results show the adjustment row in the breakdown.
+  syncLimitCapNotices(null);
 }
 
 function showWizardFromResults() {
