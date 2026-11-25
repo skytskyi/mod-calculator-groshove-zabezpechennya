@@ -958,12 +958,11 @@ body.mod-nav-open {
 }
 
 .stepper__btn:hover:not(:disabled) {
-  border-color: #212121;
-  color: #212121;
+  background: rgba(0, 0, 0, 0.04);
 }
 
 .stepper__btn:active:not(:disabled) {
-  border-color: #141414;
+  background: rgba(0, 0, 0, 0.08);
 }
 
 .stepper__btn:focus {
