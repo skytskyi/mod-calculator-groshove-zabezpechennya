@@ -918,13 +918,17 @@ function buildResultLines(result) {
 
     if (result.limitApplied) {
       const capLabel = P(LIMIT_CAP).replace(/,00$/, "");
+      const excess = round2(result.limitRaw - LIMIT_CAP);
       lines.push({
-        name: `Максимальна сума бойових виплат — ${capLabel} грн`,
-        value: round2(result.limitRaw - LIMIT_CAP),
-        error: `Розрахункова сума перевищує ліміт на ${P(
-          round2(result.limitRaw - LIMIT_CAP)
-        )} грн. Нарахування становитиме не більше ${capLabel} грн, навіть якщо вказати більше днів.`,
+        name: `Зменшення до ліміту бойових виплат (${capLabel} грн)`,
+        value: round2(-excess),
+        abbr: "",
+        calc: `${P(result.limitRaw)} → ${capLabel} (−${P(excess).replace(
+          /,00$/,
+          ""
+        )} грн)`,
         limitItem: true,
+        negative: true,
       });
     }
 
